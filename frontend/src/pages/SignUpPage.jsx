@@ -9,7 +9,10 @@ const SignUpPage = () => {
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
+  
+  const [passwordMatch, setPasswordMatch] = useState(true);
 
   // This is how we did it at first, without using our custom hook
   // const queryClient = useQueryClient();
@@ -27,7 +30,18 @@ const SignUpPage = () => {
 
   const handleSignup = (e) => {
     e.preventDefault();
-    signupMutation(signupData);
+    
+    // Check if passwords match
+    if (signupData.password !== signupData.confirmPassword) {
+      setPasswordMatch(false);
+      return;
+    }
+    
+    setPasswordMatch(true);
+    
+    // Send only these fields to the API (confirmPassword is not needed)
+    const { confirmPassword, ...dataToSend } = signupData;
+    signupMutation(dataToSend);
   };
 
   return (
@@ -108,6 +122,28 @@ const SignUpPage = () => {
                     <p className="text-xs opacity-70 mt-1">
                       Password must be at least 6 characters long
                     </p>
+                  </div>
+
+                  {/* CONFIRM PASSWORD */}
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text">Confirm Password</span>
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="********"
+                      className={`input input-bordered w-full ${
+                        !passwordMatch && signupData.confirmPassword ? "input-error" : ""
+                      }`}
+                      value={signupData.confirmPassword}
+                      onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                      required
+                    />
+                    {!passwordMatch && signupData.confirmPassword && (
+                      <p className="text-xs text-error mt-1">
+                        Passwords do not match
+                      </p>
+                    )}
                   </div>
 
                   <div className="form-control">

@@ -55,7 +55,13 @@ const Sidebar = () => {
         <div className="flex items-center gap-3">
           <div className="avatar">
             <div className="w-10 rounded-full">
-              <img src={authUser?.profilePic} alt="User Avatar" />
+              {authUser?.profilePic ? (
+                <img src={authUser.profilePic} alt={authUser.fullName} />
+              ) : (
+                <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold">{authUser?.fullName?.charAt(0)}</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex-1">
