@@ -78,7 +78,13 @@ const HomePage = () => {
                     <div className="card-body p-5 space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="avatar size-16 rounded-full">
-                          <img src={user.profilePic} alt={user.fullName} />
+                          {user.profilePic ? (
+                            <img src={user.profilePic} alt={user.fullName} />
+                          ) : (
+                            <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
+                              <span className="text-lg font-bold">{user.fullName?.charAt(0)}</span>
+                            </div>
+                          )}
                         </div>
 
                         <div>
