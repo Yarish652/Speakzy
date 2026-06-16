@@ -19,13 +19,14 @@ app.use(
   cors({
     origin: ["http://localhost:5173", "https://speakzy.onrender.com"],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-
 app.use(express.json());
 app.use(cookieParser());
-
+app.options("*", cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);

@@ -127,10 +127,25 @@ const OnboardingPage = () => {
               <textarea
                 name="bio"
                 value={formState.bio}
-                onChange={(e) => setFormState({ ...formState, bio: e.target.value })}
-                className="textarea textarea-bordered h-24"
+                onChange={(e) => {
+                  // JavaScript fallback to prevent pasting over the limit
+                  if (e.target.value.length <= 30) {
+                    setFormState({ ...formState, bio: e.target.value });
+                  }
+                }}
+                maxLength={30} // HTML attribute physically stops typing
+                className="textarea textarea-bordered h-24 resize-none"
                 placeholder="Tell others about yourself and your language learning goals"
               />
+              
+              {/* Character Counter positioned at the bottom right */}
+              <label className="label justify-end pb-0">
+                <span className={`label-text-alt ${
+                  formState.bio.length >= 30 ? "text-error font-bold" : "text-base-content/70"
+                }`}>
+                  {formState.bio?.length || 0} / 30
+                </span>
+              </label>
             </div>
 
             {/* LANGUAGES */}
@@ -187,11 +202,26 @@ const OnboardingPage = () => {
                   type="text"
                   name="location"
                   value={formState.location}
-                  onChange={(e) => setFormState({ ...formState, location: e.target.value })}
+                  onChange={(e) => {
+                    // JavaScript fallback to prevent pasting over the limit
+                    if (e.target.value.length <= 15) {
+                      setFormState({ ...formState, location: e.target.value });
+                    }
+                  }}
+                  maxLength={15} // HTML attribute physically stops typing
                   className="input input-bordered w-full pl-10"
                   placeholder="City, Country"
                 />
               </div>
+              
+              {/* Character Counter positioned at the bottom right */}
+              <label className="label justify-end pb-0 pt-1">
+                <span className={`text-xs ${
+                  formState.location?.length >= 15 ? "text-error font-bold" : "text-base-content/70"
+                }`}>
+                  {formState.location?.length || 0} / 15
+                </span>
+              </label>
             </div>
 
             {/* SUBMIT BUTTON */}
