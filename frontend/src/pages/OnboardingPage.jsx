@@ -17,6 +17,7 @@ const OnboardingPage = () => {
     learningLanguage: authUser?.learningLanguage || "",
     location: authUser?.location || "",
     profilePic: authUser?.profilePic || "",
+    gender: "male", // default to male
   });
 
   const { mutate: onboardingMutation, isPending } = useMutation({
@@ -37,12 +38,14 @@ const OnboardingPage = () => {
     onboardingMutation(formState);
   };
 
+  const AVATAR_STYLES = ["avataaars", "micah", "personas"];
+
   const handleRandomAvatar = () => {
-    // Generate a random string to act as the "name" for the initials
-    const randomName = Math.random().toString(36).substring(2, 7);
+    const style = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    const gender = formState.gender === "female" ? "female" : "male";
+    const seed = Math.random().toString(36).substring(7);
     
-    // Swap DiceBear for UI-Avatars
-    const randomAvatar = `https://ui-avatars.com/api/?name=${randomName}&background=random&color=fff&size=128`;
+    const randomAvatar = `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&gender=${gender}`;
     
     setFormState({ ...formState, profilePic: randomAvatar });
     toast.success("Random profile picture generated!");
@@ -64,6 +67,7 @@ const OnboardingPage = () => {
                     src={formState.profilePic}
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
+                    onError={(e) => (e.target.src = "/fallback-avatar.png")}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
@@ -71,6 +75,25 @@ const OnboardingPage = () => {
                   </div>
                 )}
               </div>
+              {/* GENDER TOGGLE */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormState({ ...formState, gender: "male" })}
+                  className={`btn btn-sm ${formState.gender === "male" ? "btn-primary" : "btn-outline"}`}
+                >
+                  Male
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormState({ ...formState, gender: "female" })}
+                  className={`btn btn-sm ${formState.gender === "female" ? "btn-primary" : "btn-outline"}`}
+                >
+                  Female
+                </button>
+              </div>
+
+
 
               {/* Generate Random Avatar BTN */}
               <div className="flex items-center gap-2">
