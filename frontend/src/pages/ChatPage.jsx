@@ -12,6 +12,7 @@ import {
   MessageList,
   Thread,
   Window,
+  TypingIndicator,
 } from "stream-chat-react";
 import { StreamChat } from "stream-chat";
 import toast from "react-hot-toast";
@@ -103,6 +104,7 @@ const ChatPage = () => {
             <Window>
               <ChannelHeader />
               <MessageList />
+              <TypingIndicator />
               <MessageInput focus />
             </Window>
           </div>
