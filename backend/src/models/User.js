@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      default: "male",
+    },
     friends: [
       {
         type: mongoose.Schema.Types.ObjectId,

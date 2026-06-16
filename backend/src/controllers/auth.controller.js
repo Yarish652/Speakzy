@@ -25,8 +25,8 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
     }
 
-    const idx = Math.floor(Math.random() * 100) + 1; // generate a num between 1-100
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const randomSeed = Math.random().toString(36).substring(2, 15);
+    const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`;
 
     const newUser = await User.create({
       email,
@@ -51,11 +51,11 @@ export async function signup(req, res) {
     });
 
     res.cookie("jwt", token, {
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  httpOnly: true,
-  sameSite: "none",   // <-- THIS IS IMPORTANT
-  secure: process.env.NODE_ENV !== "development",       // <-- THIS IS IMPORTANT (always true for deployed HTTPS)
-});
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production", // false in dev, true in prod
+    });
 
     res.status(201).json({ success: true, user: newUser });
   } catch (error) {
@@ -88,13 +88,12 @@ export async function login(req, res) {
     //   sameSite: "strict", // prevent CSRF attacks
     //   secure: process.env.NODE_ENV === "production",
     // });
-  res.cookie("jwt", token, {
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  httpOnly: true,
-  sameSite: "none",   // <-- THIS IS IMPORTANT
-  secure: true,       // <-- THIS IS IMPORTANT (always true for deployed HTTPS)
-});
-
+    res.cookie("jwt", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production", // false in dev, true in prod
+    });
     res.status(200).json({ success: true, user });
   } catch (error) {
     console.log("Error in login controller", error.message);
