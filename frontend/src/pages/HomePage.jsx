@@ -10,6 +10,7 @@ import { MapPinIcon, UserPlusIcon, CheckCircleIcon } from "lucide-react";
 import { capitialize } from "../lib/utils";
 
 import { getLanguageFlag } from "../components/FriendCard";
+import FlashCardWidget from "../components/FlashCardWidget"; // ADD THIS
 
 const HomePage = () => {
   const queryClient = useQueryClient();
@@ -43,6 +44,9 @@ const HomePage = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="container mx-auto space-y-10">
+         <section>
+          <FlashcardWidget />
+        </section>
         <section>
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
