@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 
 import ChatLoader from "../components/ChatLoader";
 import CallButton from "../components/CallButton";
+import useChatStore from "../store/useChatStore";
 
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
@@ -30,6 +31,7 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true);
 
   const { authUser } = useAuthUser();
+  const clearUnread = useChatStore((s) => s.clearUnread);
 
   const { data: tokenData } = useQuery({
     queryKey: ["streamToken"],
@@ -42,18 +44,17 @@ const ChatPage = () => {
       if (!tokenData?.token || !authUser) return;
 
       try {
-        console.log("Initializing stream chat client...");
-
         const client = StreamChat.getInstance(STREAM_API_KEY);
 
-        await client.connectUser(
-          {
-            id: authUser._id,
-            name: authUser.fullName,
-            image: authUser.profilePic,
-          },
-          tokenData.token
-        );
+        if (!client.userID) {
+          await client.connectUser(
+            { id: authUser._id, name: authUser.fullName, image: authUser.profilePic },
+            tokenData.token
+          );
+        }
+
+        // Clear unread badge for this friend now that the chat is open
+        clearUnread(targetUserId);
 
         //
         const channelId = [authUser._id, targetUserId].sort().join("-");

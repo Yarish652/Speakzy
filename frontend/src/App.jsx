@@ -15,6 +15,7 @@ import PageLoader from "./components/PageLoader.jsx";
 import useAuthUser from "./hooks/useAuthUser.js";
 import Layout from "./components/Layout.jsx";
 import { useThemeStore } from "./store/useThemeStore.js";
+import useInitStreamChat from "./hooks/useInitStreamChat.js";
 
 const App = () => {
   const { isLoading, authUser } = useAuthUser();
@@ -22,6 +23,8 @@ const App = () => {
 
   const isAuthenticated = Boolean(authUser);
   const isOnboarded = authUser?.isOnboarded;
+
+  useInitStreamChat();
 
   if (isLoading) return <PageLoader />;
 

@@ -1,9 +1,11 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 export async function getFlashcards(req, res) {
   try {
     const { learningLanguage, nativeLanguage } = req.user;
 
     const prompt = `Generate 5 vocabulary flashcards for someone who speaks ${nativeLanguage} and is learning ${learningLanguage}.
-    
+
     Return ONLY a JSON array, no markdown, no explanation, exactly like this:
     [
       {
@@ -14,21 +16,11 @@ export async function getFlashcards(req, res) {
       }
     ]`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      }
-    );
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
-    const data = await response.json();
-    const text = data.candidates[0].content.parts[0].text;
-
-    // strip markdown code fences if Gemini adds them
     const clean = text.replace(/```json|```/g, "").trim();
     const flashcards = JSON.parse(clean);
 
