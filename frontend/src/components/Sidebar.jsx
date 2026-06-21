@@ -1,14 +1,26 @@
 import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
 import { BellIcon, HomeIcon, Languages, UsersIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getFriendRequests } from "../lib/api";
+import useChatStore from "../store/useChatStore";
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const { authUser } = useAuthUser();
   const location = useLocation();
   const currentPath = location.pathname;
 
+  const totalUnread = useChatStore((s) => s.totalUnread);
+
+  const { data: friendRequests } = useQuery({
+    queryKey: ["friendRequests"],
+    queryFn: getFriendRequests,
+    refetchInterval: 30000,
+  });
+  const pendingRequests = friendRequests?.incomingReqs?.length || 0;
+
   return (
-    <aside className="w-64 bg-base-200 border-r border-base-300 hidden lg:flex flex-col h-screen sticky top-0">
+    <aside className="w-64 bg-base-200 border-r border-base-300 flex flex-col h-full">
       <div className="p-5 border-b border-base-300">
         <Link to="/" className="flex items-center gap-2.5">
           <Languages className="size-9 text-primary" />
@@ -21,6 +33,7 @@ const Sidebar = () => {
       <nav className="flex-1 p-4 space-y-1">
         <Link
           to="/"
+          onClick={onClose}
           className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
             currentPath === "/" ? "btn-active" : ""
           }`}
@@ -31,22 +44,30 @@ const Sidebar = () => {
 
         <Link
           to="/friends"
+          onClick={onClose}
           className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
             currentPath === "/friends" ? "btn-active" : ""
           }`}
         >
           <UsersIcon className="size-5 text-base-content opacity-70" />
           <span>Friends</span>
+          {totalUnread > 0 && (
+            <span className="badge badge-primary badge-sm ml-auto">{totalUnread}</span>
+          )}
         </Link>
 
         <Link
           to="/notifications"
+          onClick={onClose}
           className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
             currentPath === "/notifications" ? "btn-active" : ""
           }`}
         >
           <BellIcon className="size-5 text-base-content opacity-70" />
           <span>Notifications</span>
+          {pendingRequests > 0 && (
+            <span className="badge badge-error badge-sm ml-auto">{pendingRequests}</span>
+          )}
         </Link>
       </nav>
 

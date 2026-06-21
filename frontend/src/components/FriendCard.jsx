@@ -1,14 +1,24 @@
 import { Link } from "react-router";
 import { LANGUAGE_TO_FLAG } from "../constants";
+import useChatStore from "../store/useChatStore";
 
 const FriendCard = ({ friend }) => {
+  const unreadCount = useChatStore((s) => s.unreadByUser[friend._id] || 0);
+
   return (
     <div className="card bg-base-200 hover:shadow-md transition-shadow">
       <div className="card-body p-4">
         {/* USER INFO */}
         <div className="flex items-center gap-3 mb-3">
-          <div className="avatar size-12">
-            <img src={friend.profilePic} alt={friend.fullName} />
+          <div className="relative">
+            <div className="avatar size-12">
+              <img src={friend.profilePic} alt={friend.fullName} />
+            </div>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 badge badge-primary badge-xs px-1">
+                {unreadCount}
+              </span>
+            )}
           </div>
           <h3 className="font-semibold truncate">{friend.fullName}</h3>
         </div>
