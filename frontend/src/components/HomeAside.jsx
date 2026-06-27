@@ -33,7 +33,7 @@ const HomeAside = () => {
   ];
 
   return (
-    <aside className="flex flex-col gap-4 w-72 shrink-0">
+    <aside className="flex flex-col gap-4 w-full lg:w-72 lg:shrink-0">
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3">

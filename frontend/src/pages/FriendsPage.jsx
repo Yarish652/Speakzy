@@ -45,10 +45,10 @@ const FriendsPage = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full">
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* LEFT — Your Friends */}
-        <div className="flex-1 min-w-0 space-y-6">
+        <div className="w-full lg:flex-1 lg:min-w-0 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold tracking-tight">Your Friends</h2>
             <Link to="/notifications" className="btn btn-outline btn-sm">
@@ -73,7 +73,7 @@ const FriendsPage = () => {
         </div>
 
         {/* RIGHT — Find Language Partners */}
-        <div className="w-80 shrink-0 space-y-4">
+        <div className="w-full lg:w-80 lg:shrink-0 space-y-4">
           <h2 className="text-xl font-bold tracking-tight">Find Partners</h2>
 
           {loadingUsers ? (
