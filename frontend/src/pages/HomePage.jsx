@@ -23,14 +23,14 @@ const HomePage = () => {
         <p className="text-sm text-base-content/50 mt-0.5">Welcome back. Keep up the great work!</p>
       </div>
 
-      {/* Two-column layout */}
-      <div className="flex gap-6 items-start">
-        {/* Left — flashcard (grows to fill space) */}
-        <div className="flex-1 min-w-0 max-w-lg">
+      {/* Two-column layout — stacks on mobile, side-by-side on lg+ */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Flashcard — full width on mobile, capped on desktop */}
+        <div className="w-full lg:flex-1 lg:min-w-0 lg:max-w-lg">
           <FlashCardWidget />
         </div>
 
-        {/* Right — stats aside */}
+        {/* Stats aside */}
         <HomeAside />
       </div>
     </div>
