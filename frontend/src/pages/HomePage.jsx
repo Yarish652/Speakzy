@@ -1,150 +1,37 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import {
-  getOutgoingFriendReqs,
-  getRecommendedUsers,
-  sendFriendRequest,
-} from "../lib/api";
-import { MapPinIcon, UserPlusIcon, CheckCircleIcon } from "lucide-react";
+import useAuthUser from "../hooks/useAuthUser";
+import FlashCardWidget from "../components/FlashCardWidget";
+import HomeAside from "../components/HomeAside";
 
-import { capitialize } from "../lib/utils";
-
-import { getLanguageFlag } from "../components/FriendCard";
-import FlashCardWidget from "../components/FlashCardWidget"; // ADD THIS
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 const HomePage = () => {
-  const queryClient = useQueryClient();
-  const [outgoingRequestsIds, setOutgoingRequestsIds] = useState(new Set());
-
-  const { data: recommendedUsers = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ["users"],
-    queryFn: getRecommendedUsers,
-  });
-
-  const { data: outgoingFriendReqs } = useQuery({
-    queryKey: ["outgoingFriendReqs"],
-    queryFn: getOutgoingFriendReqs,
-  });
-
-  const { mutate: sendRequestMutation, isPending } = useMutation({
-    mutationFn: sendFriendRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] }),
-  });
-
-  useEffect(() => {
-    const outgoingIds = new Set();
-    if (outgoingFriendReqs && outgoingFriendReqs.length > 0) {
-      outgoingFriendReqs.forEach((req) => {
-        if (req?.recipient?._id) outgoingIds.add(req.recipient._id);
-      });
-      setOutgoingRequestsIds(outgoingIds);
-    }
-  }, [outgoingFriendReqs]);
+  const { authUser } = useAuthUser();
+  const firstName = authUser?.fullName?.split(" ")[0] || "there";
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="space-y-10">
-         <section>
+    <div className="p-4 sm:p-6 lg:p-8 min-h-full">
+      {/* Greeting */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">
+          {getGreeting()}, {firstName} 👋
+        </h1>
+        <p className="text-sm text-base-content/50 mt-0.5">Welcome back. Keep up the great work!</p>
+      </div>
+
+      {/* Two-column layout */}
+      <div className="flex gap-6 items-start">
+        {/* Left — flashcard (grows to fill space) */}
+        <div className="flex-1 min-w-0 max-w-lg">
           <FlashCardWidget />
-        </section>
-        <section>
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Speak Freely. Learn Globally.</h2>
-                <p className="opacity-70">
-                Speakzy connects you with people to chat, call, and learn in real time.                </p>
-              </div>
-            </div>
-          </div>
+        </div>
 
-          {loadingUsers ? (
-            <div className="flex justify-center py-12">
-              <span className="loading loading-spinner loading-lg" />
-            </div>
-          ) : recommendedUsers.length === 0 ? (
-            <div className="card bg-base-200 p-6 text-center">
-              <h3 className="font-semibold text-lg mb-2">No recommendations available</h3>
-              <p className="text-base-content opacity-70">
-                Check back later for new language partners!
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedUsers.map((user) => {
-                const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
-
-                return (
-                  <div
-                    key={user._id}
-                    className="card bg-base-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
-                  >
-                    <div className="card-body p-5 space-y-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="avatar size-14 rounded-full shrink-0">
-                          {user.profilePic ? (
-                            <img src={user.profilePic} alt={user.fullName} />
-                          ) : (
-                            <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
-                              <span className="text-lg font-bold">{user.fullName?.charAt(0)}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-lg truncate">{user.fullName}</h3>
-                          {user.location && (
-                            <div className="flex items-center text-xs opacity-70 mt-1 min-w-0">
-                              <MapPinIcon className="size-3 mr-1 shrink-0" />
-                              <span className="truncate">{user.location}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Languages with flags */}
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="badge badge-secondary">
-                          {getLanguageFlag(user.nativeLanguage)}
-                          Native: {capitialize(user.nativeLanguage)}
-                        </span>
-                        <span className="badge badge-outline">
-                          {getLanguageFlag(user.learningLanguage)}
-                          Learning: {capitialize(user.learningLanguage)}
-                        </span>
-                      </div>
-
-                      {user.bio && (
-                        <p className="text-sm opacity-70 line-clamp-2 break-all">{user.bio}</p>
-                      )}
-
-                      {/* Action button */}
-                      <button
-                        className={`btn w-full mt-2 ${
-                          hasRequestBeenSent ? "btn-disabled" : "btn-primary"
-                        } `}
-                        onClick={() => sendRequestMutation(user._id)}
-                        disabled={hasRequestBeenSent || isPending}
-                      >
-                        {hasRequestBeenSent ? (
-                          <>
-                            <CheckCircleIcon className="size-4 mr-2" />
-                            Request Sent
-                          </>
-                        ) : (
-                          <>
-                            <UserPlusIcon className="size-4 mr-2" />
-                            Send Friend Request
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        {/* Right — stats aside */}
+        <HomeAside />
       </div>
     </div>
   );

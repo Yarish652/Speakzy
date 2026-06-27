@@ -64,3 +64,8 @@ export async function getStreamToken() {
   const response = await axiosInstance.get("/chat/token");
   return response.data;
 }
+
+export async function getFlashcards() {
+  const response = await axiosInstance.get("/ai/flashcards");
+  return response.data;
+}

@@ -179,6 +179,15 @@ export const LANGUAGES = [
   "Dutch",
 ];
 
+export const LEARNING_LANGUAGES = [
+  "Spanish",
+  "French",
+  "German",
+  "Portuguese",
+  "Italian",
+  "Dutch",
+];
+
 export const LANGUAGE_TO_FLAG = {
   english: "gb",
   spanish: "es",

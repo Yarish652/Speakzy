@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    flashcardUsage: {
+      count: { type: Number, default: 0 },
+      lastDate: { type: String, default: "" },
+    },
   },
   { timestamps: true }
 );
