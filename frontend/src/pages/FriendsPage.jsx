@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { UsersIcon, UserPlusIcon, CheckCircleIcon, MapPinIcon } from "lucide-react";
+import { UsersIcon, UserPlusIcon, CheckCircleIcon, MapPinIcon, UserMinusIcon } from "lucide-react";
+import toast from "react-hot-toast";
 
-import { getUserFriends, getRecommendedUsers, getOutgoingFriendReqs, sendFriendRequest } from "../lib/api";
+import { getUserFriends, getRecommendedUsers, getOutgoingFriendReqs, sendFriendRequest, removeFriend } from "../lib/api";
 import FriendCard from "../components/FriendCard";
 import NoFriendsFound from "../components/NoFriendsFound";
 import { getLanguageFlag } from "../components/FriendCard";
@@ -12,6 +13,7 @@ import { capitialize } from "../lib/utils";
 const FriendsPage = () => {
   const queryClient = useQueryClient();
   const [outgoingRequestsIds, setOutgoingRequestsIds] = useState(new Set());
+  const [confirmingRemoveId, setConfirmingRemoveId] = useState(null);
 
   const { data: friends = [], isLoading: loadingFriends } = useQuery({
     queryKey: ["friends"],
@@ -31,6 +33,20 @@ const FriendsPage = () => {
   const { mutate: sendRequestMutation, isPending } = useMutation({
     mutationFn: sendFriendRequest,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] }),
+  });
+
+  const { mutate: removeFriendMutation, isPending: isRemoving } = useMutation({
+    mutationFn: removeFriend,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setConfirmingRemoveId(null);
+      toast.success("Friend removed");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to remove friend");
+      setConfirmingRemoveId(null);
+    },
   });
 
   useEffect(() => {
@@ -66,7 +82,36 @@ const FriendsPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {friends.map((friend) => (
-                <FriendCard key={friend._id} friend={friend} />
+                <div key={friend._id} className="space-y-2">
+                  <FriendCard friend={friend} />
+
+                  {confirmingRemoveId === friend._id ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-error btn-xs flex-1"
+                        onClick={() => removeFriendMutation(friend._id)}
+                        disabled={isRemoving}
+                      >
+                        Confirm remove
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        onClick={() => setConfirmingRemoveId(null)}
+                        disabled={isRemoving}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="btn btn-outline btn-xs w-full"
+                      onClick={() => setConfirmingRemoveId(friend._id)}
+                    >
+                      <UserMinusIcon className="size-3 mr-1" />
+                      Remove friend
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -90,7 +135,6 @@ const FriendsPage = () => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
                 return (
                   <div key={user._id} className="card bg-base-200 p-4 space-y-3">
-                    {/* Avatar + Name */}
                     <div className="flex items-center gap-3">
                       <div className="avatar size-10 rounded-full shrink-0">
                         {user.profilePic ? (
@@ -112,7 +156,6 @@ const FriendsPage = () => {
                       </div>
                     </div>
 
-                    {/* Language badges */}
                     <div className="flex flex-wrap gap-1">
                       <span className="badge badge-secondary badge-sm">
                         {getLanguageFlag(user.nativeLanguage)} {capitialize(user.nativeLanguage)}
@@ -122,7 +165,6 @@ const FriendsPage = () => {
                       </span>
                     </div>
 
-                    {/* Send request */}
                     <button
                       className={`btn btn-sm w-full ${hasRequestBeenSent ? "btn-disabled" : "btn-primary"}`}
                       onClick={() => sendRequestMutation(user._id)}

@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 
-// Strict limiter for login — the main brute-force target.
+// Strict limiter for login ï¿½ the main brute-force target.
 // 10 attempts per 15 minutes per IP.
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -13,7 +13,7 @@ export const loginLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// Slightly looser limiter for signup — prevents automated account creation spam.
+// Slightly looser limiter for signup ï¿½ prevents automated account creation spam.
 export const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
@@ -23,7 +23,7 @@ export const signupLimiter = rateLimit({
 });
 
 // General-purpose limiter for the rest of auth routes (logout, /me, onboarding)
-// — generous, just a backstop against abuse/scripted hammering.
+// â€” generous, just a backstop against abuse/scripted hammering.
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -31,5 +31,3 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many requests. Please slow down." },
 });
-
-console.log("[rateLimit.middleware] Rate limit middleware loaded");

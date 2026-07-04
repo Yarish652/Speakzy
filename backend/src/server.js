@@ -2,6 +2,7 @@ import express from "express";
 import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import helmet from "helmet";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -20,14 +21,23 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const staticPath = path.join(__dirname, "../../frontend/dist");
 
-console.log(`[server] Process PID=${process.pid}`);
-console.log(`[server] Using port ${PORT}`);
-console.log(`[server] Expected frontend static path: ${staticPath}`);
+// server startup info logged by environment or process manager when needed
 if (!fs.existsSync(staticPath)) {
   console.warn(`[server] Warning: static frontend path does not exist: ${staticPath}`);
 }
 
 app.set("trust proxy", 1); // required for correct client IPs behind Render's proxy
+
+app.use(
+  helmet({
+    // Stream Chat's SDK and Dicebear avatars load cross-origin resources;
+    // a default strict CSP would block both, so it's disabled here rather
+    // than left half-configured. Other helmet protections stay active
+    // (X-Content-Type-Options, X-Frame-Options, HSTS, hiding X-Powered-By, etc).
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 app.use(
   cors({
@@ -42,7 +52,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.options("*", cors());
 
-console.log("[server] Mounting API routes");
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
@@ -68,7 +77,6 @@ app.use((err, req, res, next) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
   connectDB();
 });
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { acceptFriendRequest, getFriendRequests } from "../lib/api";
-import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
+import { acceptFriendRequest, declineFriendRequest, getFriendRequests } from "../lib/api";
+import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon, XIcon } from "lucide-react";
+import toast from "react-hot-toast";
 import NoNotificationsFound from "../components/NoNotificationsFound";
 
 const NotificationsPage = () => {
@@ -11,11 +12,22 @@ const NotificationsPage = () => {
     queryFn: getFriendRequests,
   });
 
-  const { mutate: acceptRequestMutation, isPending } = useMutation({
+  const { mutate: acceptRequestMutation, isPending: isAccepting } = useMutation({
     mutationFn: acceptFriendRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+  });
+
+  const { mutate: declineRequestMutation, isPending: isDeclining } = useMutation({
+    mutationFn: declineFriendRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+      toast.success("Request declined");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to decline request");
     },
   });
 
@@ -66,13 +78,23 @@ const NotificationsPage = () => {
                             </div>
                           </div>
 
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => acceptRequestMutation(request._id)}
-                            disabled={isPending}
-                          >
-                            Accept
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => declineRequestMutation(request._id)}
+                              disabled={isAccepting || isDeclining}
+                            >
+                              <XIcon className="size-4" />
+                              Decline
+                            </button>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => acceptRequestMutation(request._id)}
+                              disabled={isAccepting || isDeclining}
+                            >
+                              Accept
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

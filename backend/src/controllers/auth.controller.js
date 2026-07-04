@@ -2,31 +2,11 @@ import { upsertStreamUser } from "../lib/stream.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
-
-
-// simple guard used by both signup and login
-function isNonEmptyString(val) {
-  return typeof val === "string" && val.trim().length > 0;
-}
-
 export async function signup(req, res) {
+  // req.body is already validated & trimmed by validateBody(signupSchema)
   const { email, password, fullName } = req.body;
 
   try {
-    if (!email || !password || !fullName) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
-    }
-
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
@@ -73,11 +53,8 @@ export async function signup(req, res) {
 
 export async function login(req, res) {
   try {
+    // req.body is already validated by validateBody(loginSchema)
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
 
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ message: "Invalid email or password" });
@@ -89,12 +66,6 @@ export async function login(req, res) {
       expiresIn: "7d",
     });
 
-    // res.cookie("jwt", token, {
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
-    //   httpOnly: true, // prevent XSS attacks,
-    //   sameSite: "strict", // prevent CSRF attacks
-    //   secure: process.env.NODE_ENV === "production",
-    // });
     res.cookie("jwt", token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -117,21 +88,7 @@ export async function onboard(req, res) {
   try {
     const userId = req.user._id;
 
-    const { fullName, bio, nativeLanguage, learningLanguage, location } = req.body;
-
-    if (!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
-      return res.status(400).json({
-        message: "All fields are required",
-        missingFields: [
-          !fullName && "fullName",
-          !bio && "bio",
-          !nativeLanguage && "nativeLanguage",
-          !learningLanguage && "learningLanguage",
-          !location && "location",
-        ].filter(Boolean),
-      });
-    }
-
+    // req.body is already validated by validateBody(onboardSchema)
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
