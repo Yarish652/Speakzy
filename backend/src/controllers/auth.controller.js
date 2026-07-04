@@ -2,6 +2,13 @@ import { upsertStreamUser } from "../lib/stream.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
+
+
+// simple guard used by both signup and login
+function isNonEmptyString(val) {
+  return typeof val === "string" && val.trim().length > 0;
+}
+
 export async function signup(req, res) {
   const { email, password, fullName } = req.body;
 

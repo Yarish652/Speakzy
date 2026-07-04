@@ -77,6 +77,13 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return isPasswordCorrect;
 };
 
+// Strip password whenever a document is serialized (res.json, JSON.stringify, etc.)
+userSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  return obj;
+};
+
 const User = mongoose.model("User", userSchema);
 
 export default User;

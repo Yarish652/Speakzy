@@ -3,6 +3,7 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +17,17 @@ import aiRoutes from "./routes/ai.route.js";
 import { connectDB } from "./lib/db.js";
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5001;
+const staticPath = path.join(__dirname, "../../frontend/dist");
+
+console.log(`[server] Process PID=${process.pid}`);
+console.log(`[server] Using port ${PORT}`);
+console.log(`[server] Expected frontend static path: ${staticPath}`);
+if (!fs.existsSync(staticPath)) {
+  console.warn(`[server] Warning: static frontend path does not exist: ${staticPath}`);
+}
+
+app.set("trust proxy", 1); // required for correct client IPs behind Render's proxy
 
 app.use(
   cors({
@@ -30,17 +41,42 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.options("*", cors());
+
+console.log("[server] Mounting API routes");
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/ai", aiRoutes);
 
-app.use(express.static(path.join(__dirname, "../public")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
+app.use("/api", (req, res) => {
+  console.warn(`[server] API 404: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ success: false, message: "API route not found" });
 });
 
-app.listen(PORT, () => {
+app.use(express.static(staticPath));
+app.get("*", (req, res) => {
+  if (!fs.existsSync(path.join(staticPath, "index.html"))) {
+    console.error(`[server] Missing index.html at ${path.join(staticPath, "index.html")}`);
+    return res.status(500).send("Frontend assets missing. Build the frontend before serving.");
+  }
+  res.sendFile(path.join(staticPath, "index.html"));
+});
+
+app.use((err, req, res, next) => {
+  console.error(`[server error] ${err.stack || err}`);
+  res.status(err.status || 500).json({ success: false, error: err.message || "Server Error" });
+});
+
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectDB();
+});
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`[server] Port ${PORT} is already in use. Try setting PORT to a different value.`);
+  } else {
+    console.error(`[server] Server error: ${error.message}`);
+  }
+  process.exit(1);
 });
