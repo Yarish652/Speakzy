@@ -49,7 +49,7 @@ export async function sendFriendRequest(req, res) {
     }
 
     // check if user is already friends
-    if (recipient.friends.includes(myId)) {
+    if (recipient.friends.some((friend) => friend.toString() === myId)) {
       return res.status(400).json({ message: "You are already friends with this user" });
     }
 
@@ -78,6 +78,75 @@ export async function sendFriendRequest(req, res) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+
+export async function declineFriendRequest(req, res) {
+  try {
+    const { id: requestId } = req.params;
+
+    const friendRequest = await FriendRequest.findById(requestId);
+
+    if (!friendRequest) {
+      return res.status(404).json({ message: "Friend request not found" });
+    }
+
+    // Only the recipient can decline it
+    if (friendRequest.recipient.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You are not authorized to decline this request" });
+    }
+
+    if (friendRequest.status !== "pending") {
+      return res.status(400).json({ message: "This request has already been resolved" });
+    }
+
+    await FriendRequest.findByIdAndDelete(requestId);
+
+    res.status(200).json({ message: "Friend request declined" });
+  } catch (error) {
+    console.log("Error in declineFriendRequest controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+
+export async function removeFriend(req, res) {
+  try {
+    const myId = req.user.id;
+    const { id: friendId } = req.params;
+
+    if (myId === friendId) {
+      return res.status(400).json({ message: "Invalid operation" });
+    }
+
+    const friend = await User.findById(friendId);
+    if (!friend) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!req.user.friends.some((friend) => friend.toString() === friendId)) {
+      return res.status(400).json({ message: "You are not friends with this user" });
+    }
+
+    await User.findByIdAndUpdate(myId, { $pull: { friends: friendId } });
+    await User.findByIdAndUpdate(friendId, { $pull: { friends: myId } });
+
+    // Clean up the old accepted FriendRequest doc so a fresh request
+    // can be sent later without hitting the "already exists" check.
+    await FriendRequest.findOneAndDelete({
+      $or: [
+        { sender: myId, recipient: friendId },
+        { sender: friendId, recipient: myId },
+      ],
+    });
+
+    res.status(200).json({ message: "Friend removed" });
+  } catch (error) {
+    console.log("Error in removeFriend controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+
 
 export async function acceptFriendRequest(req, res) {
   try {

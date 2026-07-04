@@ -17,10 +17,8 @@ export const logout = async () => {
 export const getAuthUser = async () => {
   try {
     const res = await axiosInstance.get("/auth/me");
-    console.log("getAuthUser response:", res.data); // ADD THIS
     return res.data;
   } catch (error) {
-    console.log("Error in getAuthUser:", error);
     return null;
   }
 };
@@ -67,5 +65,15 @@ export async function getStreamToken() {
 
 export async function getFlashcards() {
   const response = await axiosInstance.get("/ai/flashcards");
+  return response.data;
+}
+
+export async function declineFriendRequest(requestId) {
+  const response = await axiosInstance.delete(`/users/friend-request/${requestId}`);
+  return response.data;
+}
+
+export async function removeFriend(friendId) {
+  const response = await axiosInstance.delete(`/users/friends/${friendId}`);
   return response.data;
 }
