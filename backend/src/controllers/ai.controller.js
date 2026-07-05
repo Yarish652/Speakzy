@@ -1,114 +1,144 @@
 import User from "../models/User.js";
 
 const DAILY_LIMIT = 5;
+const CATEGORIES = [
+  "food", "travel", "family", "university", "shopping",
+  "work", "numbers", "greetings", "emotions", "home",
+];
 
-export async function getFlashcards(req, res) {
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    const usage = req.user.flashcardUsage || { count: 0, lastDate: "" };
-    const isToday = usage.lastDate === today;
-    const currentCount = isToday ? usage.count : 0;
+const PRIMARY_MODEL = "openai/gpt-4o-mini";
+const FALLBACK_MODEL = "google/gemini-flash-1.5";
 
-    console.log(`[AI] User ${req.user._id} | date: ${today} | usage: ${currentCount}/${DAILY_LIMIT}`);
-
-    if (currentCount >= DAILY_LIMIT) {
-      console.log("[AI] Daily limit reached, rejecting request");
-      return res.status(429).json({
-        message: "Daily limit reached. Come back tomorrow!",
-        remaining: 0,
-      });
-    }
-
-    const { learningLanguage, nativeLanguage } = req.user;
-
-    const categories = ["food", "travel", "family", "university", "shopping", "work", "numbers", "greetings", "emotions", "home"];
-    const todayCategory = categories[Math.floor(Math.random() * categories.length)];
-    console.log(`[AI] Generating cards: ${nativeLanguage} → ${learningLanguage} | theme: ${todayCategory}`);
-
-    const prompt = `Generate exactly 5 beginner (A1) vocabulary flashcards about the theme "${todayCategory}" for a ${nativeLanguage} speaker learning ${learningLanguage}.
+function buildPrompt(category, nativeLanguage, learningLanguage) {
+  return `Generate exactly 5 beginner (A1) vocabulary flashcards about the theme "${category}" for a ${nativeLanguage} speaker learning ${learningLanguage}.
 
 Rules:
-- All 5 cards must be about "${todayCategory}"
+- All 5 cards must be about "${category}"
 - High-frequency, everyday vocabulary only
 - Natural, conversational example sentences
 - Only one primary meaning per word
 - ACTIVE RECALL format: nativeWord is what the user already knows, targetWord is what they are learning
 
-Return ONLY a valid JSON array. No markdown, no explanation, no extra text.
+Respond with a JSON object of exactly this shape and nothing else:
+{
+  "flashcards": [
+    {
+      "nativeWord": "the word in ${nativeLanguage}",
+      "targetWord": "the word in ${learningLanguage}",
+      "romanization": "phonetic romanization only if ${learningLanguage} uses a non-Latin script (Japanese→romaji, Chinese→pinyin, Korean→revised romanization, Arabic/Hindi/Russian/Greek/Thai→standard transliteration). Use empty string \"\" for Latin-script languages",
+      "exampleTarget": "a short natural sentence using targetWord in ${learningLanguage}",
+      "exampleNative": "the ${nativeLanguage} translation of that sentence",
+      "partOfSpeech": "noun | verb | adjective | adverb | phrase",
+      "difficulty": "A1",
+      "category": "${category}"
+    }
+  ]
+}
+Return exactly 5 objects in the array.`;
+}
 
-[
-  {
-    "nativeWord": "the word in ${nativeLanguage}",
-    "targetWord": "the word in ${learningLanguage}",
-    "romanization": "phonetic romanization only if ${learningLanguage} uses a non-Latin script (Japanese→romaji, Chinese→pinyin, Korean→revised romanization, Arabic/Hindi/Russian/Greek/Thai→standard transliteration). Use empty string \"\" for Latin-script languages like French, Spanish, German, Italian, Portuguese",
-    "exampleTarget": "a short natural sentence using targetWord in ${learningLanguage}",
-    "exampleNative": "the ${nativeLanguage} translation of that sentence",
-    "partOfSpeech": "noun | verb | adjective | adverb | phrase",
-    "difficulty": "A1",
-    "category": "${todayCategory}"
+async function callModel(model, prompt) {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+      plugins: [{ id: "response-healing" }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenRouter error from ${model}: ${response.status} ${errorText}`);
   }
-]
 
-Return exactly 5 objects.`;
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error(`Empty response body from ${model}`);
 
-    console.log("[AI] Sending request to OpenRouter...");
+  const parsed = JSON.parse(text);
+  if (!Array.isArray(parsed.flashcards) || parsed.flashcards.length === 0) {
+    throw new Error(`Model ${model} returned no flashcards array`);
+  }
+  return parsed.flashcards;
+}
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-
-    console.log("[AI] OpenRouter status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[AI] OpenRouter error:", errorText);
-      return res.status(500).json({ message: "AI service error", detail: errorText });
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content;
-    console.log("[AI] Raw text received, length:", text?.length);
-
-    // Strip markdown fences then extract only the [...] block
-    const stripped = text.replace(/```json\n?|```/g, "").trim();
-    const jsonMatch = stripped.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("No JSON array found in model response");
-
-    const sanitized = jsonMatch[0]
-      // Remove raw control chars that break JSON (keep \t \n \r)
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-      // Fix bad unicode escapes (e.g. \u followed by non-hex)
-      .replace(/\\u(?![0-9a-fA-F]{4})/g, "u");
-
-    let flashcards;
+async function generateFlashcards(category, nativeLanguage, learningLanguage) {
+  const prompt = buildPrompt(category, nativeLanguage, learningLanguage);
+  try {
+    return await callModel(PRIMARY_MODEL, prompt);
+  } catch (primaryError) {
+    console.error("[AI] Primary model failed, trying fallback:", primaryError.message);
     try {
-      flashcards = JSON.parse(sanitized);
-    } catch {
-      // Last resort: escape raw newlines inside string values
-      const safe = sanitized.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) =>
-        '"' + inner.replace(/\n/g, "\\n").replace(/\r/g, "\\r") + '"'
-      );
-      flashcards = JSON.parse(safe);
+      return await callModel(FALLBACK_MODEL, prompt);
+    } catch (fallbackError) {
+      console.error("[AI] Fallback model also failed:", fallbackError.message);
+      throw new Error("AI generation failed on both primary and fallback models");
+    }
+  }
+}
+
+async function generateAndSaveNewSet(user) {
+  const today = new Date().toISOString().split("T")[0];
+  const usage = user.flashcardUsage || { count: 0, lastDate: "" };
+  const isToday = usage.lastDate === today;
+  const currentCount = isToday ? usage.count : 0;
+
+  if (currentCount >= DAILY_LIMIT) {
+    return { limitReached: true, remaining: 0 };
+  }
+
+  const category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+  const { learningLanguage, nativeLanguage } = user;
+
+  const flashcards = await generateFlashcards(category, nativeLanguage, learningLanguage);
+
+  const newCount = currentCount + 1;
+  await User.findByIdAndUpdate(user._id, {
+    flashcardUsage: { count: newCount, lastDate: today, cards: flashcards, category },
+  });
+
+  return { flashcards, remaining: DAILY_LIMIT - newCount };
+}
+
+export async function getFlashcards(req, res) {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const usage = req.user.flashcardUsage || { count: 0, lastDate: "", cards: [] };
+    const isToday = usage.lastDate === today;
+
+    if (isToday && Array.isArray(usage.cards) && usage.cards.length > 0) {
+      return res.status(200).json({
+        flashcards: usage.cards,
+        remaining: Math.max(DAILY_LIMIT - usage.count, 0),
+      });
     }
 
-    const newCount = currentCount + 1;
-    await User.findByIdAndUpdate(req.user._id, {
-      flashcardUsage: { count: newCount, lastDate: today },
-    });
-
-    console.log(`[AI] Success | usage now: ${newCount}/${DAILY_LIMIT} | remaining: ${DAILY_LIMIT - newCount}`);
-
-    res.status(200).json({ flashcards, remaining: DAILY_LIMIT - newCount });
+    const result = await generateAndSaveNewSet(req.user);
+    if (result.limitReached) {
+      return res.status(429).json({ message: "Daily limit reached. Come back tomorrow!", remaining: 0 });
+    }
+    res.status(200).json(result);
   } catch (error) {
     console.error("[AI] Error in getFlashcards:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(502).json({ message: "AI service is temporarily unavailable. Please try again shortly." });
+  }
+}
+
+export async function getNextFlashcards(req, res) {
+  try {
+    const result = await generateAndSaveNewSet(req.user);
+    if (result.limitReached) {
+      return res.status(429).json({ message: "Daily limit reached. Come back tomorrow!", remaining: 0 });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("[AI] Error in getNextFlashcards:", error.message);
+    res.status(502).json({ message: "AI service is temporarily unavailable. Please try again shortly." });
   }
 }
