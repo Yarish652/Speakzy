@@ -3,58 +3,22 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    fullName: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
-    bio: {
-      type: String,
-      default: "",
-    },
-    profilePic: {
-      type: String,
-      default: "",
-    },
-    nativeLanguage: {
-      type: String,
-      default: "",
-    },
-    learningLanguage: {
-      type: String,
-      default: "",
-    },
-    location: {
-      type: String,
-      default: "",
-    },
-    isOnboarded: {
-      type: Boolean,
-      default: false,
-    },
-    gender: {
-      type: String,
-      enum: ["male", "female", "other"],
-      default: "male",
-    },
-    friends: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true, minlength: 6 },
+    bio: { type: String, default: "" },
+    profilePic: { type: String, default: "" },
+    nativeLanguage: { type: String, default: "" },
+    learningLanguage: { type: String, default: "" },
+    location: { type: String, default: "" },
+    isOnboarded: { type: Boolean, default: false },
+    gender: { type: String, enum: ["male", "female", "other"], default: "male" },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     flashcardUsage: {
       count: { type: Number, default: 0 },
       lastDate: { type: String, default: "" },
+      cards: { type: [mongoose.Schema.Types.Mixed], default: [] },
+      category: { type: String, default: "" },
     },
   },
   { timestamps: true }
