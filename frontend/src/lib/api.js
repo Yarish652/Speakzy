@@ -77,12 +77,6 @@ export async function removeFriend(friendId) {
   const response = await axiosInstance.delete(`/users/friends/${friendId}`);
   return response.data;
 }
-
-export async function getFlashcards() {
-  const response = await axiosInstance.get("/ai/flashcards");
-  return response.data;
-}
-
 export async function getNextFlashcards() {
   const response = await axiosInstance.post("/ai/flashcards/next");
   return response.data;
