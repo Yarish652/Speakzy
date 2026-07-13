@@ -1,14 +1,15 @@
 import { Flame, BookOpen, Target, Users, Bell, ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
+import { useStudyStats } from "../context/StudyStatsContext";
 
 const HomeAside = () => {
   const { authUser } = useAuthUser();
+  const { wordsStudied } = useStudyStats();
 
   const today = new Date().toISOString().split("T")[0];
   const usage = authUser?.flashcardUsage;
   const sessionsToday = usage?.lastDate === today ? usage.count : 0;
-  const wordsToday = sessionsToday * 5;
   const dailyProgress = Math.round((sessionsToday / 5) * 100);
 
   const quickActions = [
@@ -44,7 +45,7 @@ const HomeAside = () => {
         </div>
         <div className="rounded-2xl bg-base-200 border border-base-300 p-4">
           <BookOpen className="size-5 text-primary" />
-          <p className="mt-3 text-2xl font-semibold tracking-tight">{wordsToday}</p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight">{wordsStudied}</p>
           <p className="text-xs text-base-content/50">Words studied</p>
         </div>
       </div>

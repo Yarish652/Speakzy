@@ -1,0 +1,39 @@
+{
+  "promptVersion": "v2",
+  "date": "2026-07-13T15:47:40.337Z",
+  "overallMean": 4.825000000000001,
+  "cases": [
+    {
+      "id": "en-fr-food",
+      "overall": 4.933333333333334
+    },
+    {
+      "id": "en-es-travel",
+      "overall": 4.933333333333334
+    },
+    {
+      "id": "en-ja-greetings",
+      "overall": 4.666666666666667
+    },
+    {
+      "id": "en-zh-numbers",
+      "overall": 4.8
+    },
+    {
+      "id": "en-hi-home",
+      "overall": 4.866666666666666
+    },
+    {
+      "id": "en-ru-university",
+      "overall": 4.533333333333333
+    },
+    {
+      "id": "fr-en-food",
+      "overall": 4.933333333333334
+    },
+    {
+      "id": "hi-en-greetings",
+      "overall": 4.933333333333334
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+# AI eval suite (docs/AI_ROADMAP.md Phase 3). Separate workflow from ci.yml
+# so its path filters and schedule don't affect the main test/build pipeline.
+#
+# Tier 1 (deterministic checks, ~16 real LLM calls, cents): on pushes/PRs
+# that touch backend code, and on manual dispatch.
+# Tier 2 (LLM-as-judge): weekly + manual dispatch only — it costs more and
+# its job is drift detection, not per-commit gating.
+#
+# Requires the OPENROUTER_API_KEY repo secret; jobs skip gracefully when the
+# secret is absent (e.g. on forks).
+
+name: AI Evals
+
+on:
+  push:
+    branches: [main, agents/run-project-setup]
+    paths:
+      - "backend/src/**"
+      - "backend/evals/**"
+      - ".github/workflows/ai-evals.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/src/**"
+      - "backend/evals/**"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+
+jobs:
+  tier1-deterministic:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Run Tier 1 evals
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::notice::OPENROUTER_API_KEY secret not set - skipping evals."
+            exit 0
+          fi
+          npm run eval
+
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tier1-eval-report
+          path: backend/evals/results/
+          if-no-files-found: ignore
+
+  tier2-judge:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Run Tier 2 judge evals
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::notice::OPENROUTER_API_KEY secret not set - skipping judge evals."
+            exit 0
+          fi
+          npm run eval:judge
+
+      - name: Upload judge report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tier2-judge-report
+          path: backend/evals/results/
+          if-no-files-found: ignore

@@ -6,14 +6,36 @@ export async function getRecommendedUsers(req, res) {
     const currentUserId = req.user.id;
     const currentUser = req.user;
 
-    const recommendedUsers = await User.find({
+    // Pagination — keeps this query bounded so it never returns the entire
+    // users collection as the app grows. Defaults to the first page of 12;
+    // limit is clamped to [1, 50] so a client can't ask for everything.
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 50);
+    const skip = (page - 1) * limit;
+
+    const filter = {
       $and: [
-        { _id: { $ne: currentUserId } }, //exclude current user
+        { _id: { $ne: currentUserId } }, // exclude current user
         { _id: { $nin: currentUser.friends } }, // exclude current user's friends
         { isOnboarded: true },
       ],
+    };
+
+    const [users, totalCount] = await Promise.all([
+      User.find(filter).skip(skip).limit(limit),
+      User.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      users,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: skip + users.length < totalCount,
+      },
     });
-    res.status(200).json(recommendedUsers);
   } catch (error) {
     console.error("Error in getRecommendedUsers controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });

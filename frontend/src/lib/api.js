@@ -18,7 +18,7 @@ export const getAuthUser = async () => {
   try {
     const res = await axiosInstance.get("/auth/me");
     return res.data;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -33,9 +33,10 @@ export async function getUserFriends() {
   return response.data;
 }
 
-export async function getRecommendedUsers() {
-  const response = await axiosInstance.get("/users");
-  return response.data;
+export async function getRecommendedUsers({ page = 1, limit = 12 } = {}) {
+  const response = await axiosInstance.get("/users", { params: { page, limit } });
+  // Backend returns { users, pagination }; the discover page only needs the list.
+  return response.data.users;
 }
 
 export async function getOutgoingFriendReqs() {
@@ -79,5 +80,30 @@ export async function removeFriend(friendId) {
 }
 export async function getNextFlashcards() {
   const response = await axiosInstance.post("/ai/flashcards/next");
+  return response.data;
+}
+
+export async function recordStudyEvent(payload) {
+  const response = await axiosInstance.post("/ai/study", payload);
+  return response.data;
+}
+
+export async function getTodayStudy() {
+  const response = await axiosInstance.get("/ai/study/today");
+  return response.data;
+}
+
+export async function getLlmStats() {
+  const response = await axiosInstance.get("/admin/llm-stats");
+  return response.data;
+}
+
+export async function getReviewCards() {
+  const response = await axiosInstance.get("/ai/review");
+  return response.data;
+}
+
+export async function submitReviewResult({ targetWord, correct }) {
+  const response = await axiosInstance.post("/ai/review", { targetWord, correct });
   return response.data;
 }

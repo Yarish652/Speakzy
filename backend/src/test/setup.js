@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import { beforeAll, afterAll, afterEach } from "vitest";
 
+// dotenv (loaded transitively via lib/stream.js) pulls the developer's real
+// .env into tests. Blank out the embeddings key so no test can ever hit the
+// real embeddings API — tests that need vectors mock lib/embeddings.js.
+process.env.GEMINI_API_KEY = "";
+
 const TEST_MONGO_URI =
   process.env.MONGO_URI || "mongodb://127.0.0.1:27017/speakzy_test";
 
