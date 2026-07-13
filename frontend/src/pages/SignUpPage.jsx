@@ -3,6 +3,7 @@ import { Languages } from "lucide-react";
 import { Link } from "react-router";
 
 import useSignUp from "../hooks/useSignUp";
+import Footer from "../components/Footer";
 
 const SignUpPage = () => {
   const [signupData, setSignupData] = useState({
@@ -40,15 +41,13 @@ const SignUpPage = () => {
     setPasswordMatch(true);
     
     // Send only these fields to the API (confirmPassword is not needed)
-    const { confirmPassword, ...dataToSend } = signupData;
+    const { confirmPassword: _confirmPassword, ...dataToSend } = signupData;
     signupMutation(dataToSend);
   };
 
   return (
-    <div
-      className="h-screen flex items-center justify-center p-4 sm:p-6 md:p-8"
-      data-theme="forest"
-    >
+    <div className="h-screen flex flex-col" data-theme="forest">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
       <div className="border border-primary/25 flex flex-col lg:flex-row w-full max-w-5xl mx-auto bg-base-100 rounded-xl shadow-lg overflow-hidden">
         {/* SIGNUP FORM - LEFT SIDE */}
         <div className="w-full lg:w-1/2 p-4 sm:p-8 flex flex-col">
@@ -199,6 +198,8 @@ const SignUpPage = () => {
           </div>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

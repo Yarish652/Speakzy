@@ -34,6 +34,18 @@ describe("GET /api/admin/llm-stats", () => {
     expect(res.status).toBe(401);
   });
 
+  it("exposes isAdmin on /me for admin UI gating (true for admins, false otherwise)", async () => {
+    process.env.ADMIN_EMAILS = "flagged@example.com";
+    const adminAgent = await createUser("flagged@example.com");
+    const regularAgent = await createUser("unflagged@example.com");
+
+    const adminMe = await adminAgent.get("/api/auth/me").set("X-Forwarded-For", freshIp());
+    const regularMe = await regularAgent.get("/api/auth/me").set("X-Forwarded-For", freshIp());
+
+    expect(adminMe.body.isAdmin).toBe(true);
+    expect(regularMe.body.isAdmin).toBe(false);
+  });
+
   it("rejects a logged-in user who is not on the admin list", async () => {
     process.env.ADMIN_EMAILS = "someone-else@example.com";
     const agent = await createUser("regular@example.com");

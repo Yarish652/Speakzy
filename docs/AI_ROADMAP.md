@@ -293,8 +293,8 @@ What doesn't / accepted gaps:
 ### Verification Gate 3 (mandatory)
 
 - [x] Tier 1 runs locally (`npm run eval`) and passes against the live API — 16/16, zero flaky, across 8 non-Latin-script languages
-- [ ] Tier 1 runs green in GitHub Actions (needs: push + OPENROUTER_API_KEY repo secret; skips gracefully without it)
-- [ ] Deliberately break the prompt (e.g. ask for 4 cards) on a branch → Tier 1 FAILS (do after first CI run)
+- [x] Tier 1 runs green in GitHub Actions — passed on the branch push AND again on main after the merge (secret wired correctly)
+- [x] Deliberate-break drill: prompt changed to ask for 4 cards → all eval cases FAILED on strict-schema ("expected array to have >=5 items"), retry policy re-tested each once, 0/3 passed. Run locally (the workflow's push trigger is branch-filtered, so a throwaway branch wouldn't trigger it; CI exit-code propagation is proven by the green runs). Sabotage reverted. GATE 3 PASSED. Deep-dive doc: PHASE_3_EVALS.md
 - [x] Tier 2 runs locally, produces report + baseline: v2 baseline = 4.83/5 overall (translation/naturalness/level means per case in evals/baselines/v2.json — COMMIT this file)
 - [x] Total Tier 1 cost per run: ~16-32 calls of a few hundred tokens ≈ $0.01-0.02 — well under target
 
@@ -354,18 +354,38 @@ What doesn't / accepted gaps:
 
 ### Verification Gate 4 (mandatory)
 
-- [ ] `npm test` passes — including: explain endpoint 400s on oversized input, 401 unauthed, quota 429 after limit
-- [ ] Ingestion script ran; `GrammarSentence` count per language pair recorded here
-- [ ] Manual: explanation for a flashcard example sentence is grounded — citations are genuinely similar sentences, links resolve on tatoeba.org
-- [ ] Prompt-injection spot check: adversarial `question` ("ignore instructions and…") stays on grammar
-- [ ] `LlmCall` docs with `feature: "grammar"` appearing; cost per query recorded (target < $0.01)
-- [ ] Tatoeba attribution present in README and modal UI
+- [x] `npm test` passes — 81/81 incl. 7 grammar-endpoint tests (grounded citations from the correct pair only, prompt contains retrieved examples, corpus-less degradation, 429 with zero model spend, quota counting, 400/401) + 4 ingestion-parser tests
+- [x] Ingestion ran: pair "fra-eng" = 700 sentences, all embedded (verified in Atlas). Free tier caps embeddings at 1000 requests/DAY (a separate limit from the 100/min one) — hit at 700. Script now resumes by skipping already-embedded docs; run `node scripts/ingest-tatoeba.js --target=fra --native=eng --limit=1000` after the daily reset to top up.
+- [ ] Manual: explanation grounded, citation links resolve on tatoeba.org — NOTE: today the query embedding will 429 (daily quota spent on ingestion) so citations degrade to [] gracefully; full check after the quota resets (~midnight PT)
+- [ ] Prompt-injection spot check: adversarial question stays on grammar
+- [x] `LlmCall` docs with `feature: "grammar"` + meta.citationCount (test-covered); cost per query: gpt-4o-mini at ~400-600 tokens ≈ well under $0.01
+- [x] Tatoeba attribution in README (corpus section + license), the modal footer, and the global app footer (CC-BY 2.0 FR). Deep-dive doc: PHASE_4_GRAMMAR_TUTOR.md
 
 **Gate results (fill in):**
 ```
-Date:
+Date: 2026-07-13
 What works:
+- 81/81 backend tests; frontend builds/lints clean.
+- POST /api/ai/explain: embed query -> retrieveSimilarSentences (memory
+  driver with per-pair in-process corpus cache; atlas driver ready for a
+  "grammarsentence_embedding" index) -> grounded explanation via the
+  Phase 1 choke point (feature "grammar", promptVersion "g1", 10/day
+  quota). Citations come from OUR retrieval, never model-invented.
+- Ingestion: manythings.org Tatoeba-derived pair file (CC-BY, per-line
+  attribution preserving sentence ids) -> beginner filter -> dedupe ->
+  rate-limit-paced embedding -> idempotent upserts. 700 fra-eng docs live.
+- UI: "Why is this sentence built this way?" on flipped cards -> modal
+  with citations, optional follow-up question, quota counter, CC-BY
+  attribution. Auto-explain ref-guarded against StrictMode double-spend.
 What doesn't / accepted gaps:
+- Free-tier embedding DAILY cap (1000/day) discovered mid-ingestion:
+  corpus at 700/1000 today, top-up after reset. Explain works today but
+  with citations [] until then (embed 429 degrades gracefully by design).
+- Two manual checks pending (user, after quota reset): grounding/links
+  and the prompt-injection spot check.
+- manythings.org pair files are English-based: non-English NATIVE
+  languages need the canonical downloads.tatoeba.org export route
+  (documented in the script).
 ```
 
 ---

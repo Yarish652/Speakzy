@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import StudiedWord from "../models/StudiedWord.js";
+import GrammarSentence from "../models/GrammarSentence.js";
 
 // Retrieval interface for the RAG pipeline, with two interchangeable drivers:
 //
@@ -86,6 +87,70 @@ export async function retrieveRelatedKnownWords({ userId, targetLanguage, queryV
     return await driver({ userId, targetLanguage, queryVector, k });
   } catch (error) {
     console.error("[RAG] Retrieval failed, continuing without known-word context:", error.message);
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Grammar-sentence retrieval (Phase 4). Unlike a user's words (hundreds),
+// this corpus is thousands of docs per language pair — big enough that the
+// memory driver caches each pair's vectors in-process after the first load
+// (capped) instead of re-fetching per query, and big enough that production
+// should prefer the Atlas driver (index "grammarsentence_embedding", path
+// embedding, 768 dims, cosine, filter field: pair).
+
+const MEMORY_CORPUS_CAP = 10000;
+const sentenceCorpusCache = new Map(); // pair -> [{ targetText, nativeText, tatoebaId, embedding }]
+
+// Exposed for tests (the cache would otherwise leak between test cases).
+export function clearSentenceCorpusCache() {
+  sentenceCorpusCache.clear();
+}
+
+async function memorySentenceDriver({ pair, queryVector, k }) {
+  if (!sentenceCorpusCache.has(pair)) {
+    const docs = await GrammarSentence.find({ pair, "embedding.0": { $exists: true } })
+      .limit(MEMORY_CORPUS_CAP)
+      .select("+embedding targetText nativeText tatoebaId")
+      .lean();
+    sentenceCorpusCache.set(pair, docs);
+  }
+
+  return sentenceCorpusCache
+    .get(pair)
+    .map((doc) => ({ doc, score: cosineSimilarity(queryVector, doc.embedding) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k)
+    .map(({ doc }) => ({ targetText: doc.targetText, nativeText: doc.nativeText, tatoebaId: doc.tatoebaId }));
+}
+
+async function atlasSentenceDriver({ pair, queryVector, k }) {
+  const results = await GrammarSentence.aggregate([
+    {
+      $vectorSearch: {
+        index: "grammarsentence_embedding",
+        path: "embedding",
+        queryVector,
+        numCandidates: Math.max(k * 15, 100),
+        limit: k,
+        filter: { pair },
+      },
+    },
+    { $project: { targetText: 1, nativeText: 1, tatoebaId: 1 } },
+  ]);
+  return results.map((r) => ({ targetText: r.targetText, nativeText: r.nativeText, tatoebaId: r.tatoebaId }));
+}
+
+// Top-k corpus sentences most similar to the query. Returns [] on any
+// failure — the grammar tutor then explains without citations.
+export async function retrieveSimilarSentences({ pair, queryVector, k = 5 }) {
+  if (!pair || !queryVector) return [];
+
+  const driver = process.env.VECTOR_DRIVER === "atlas" ? atlasSentenceDriver : memorySentenceDriver;
+  try {
+    return await driver({ pair, queryVector, k });
+  } catch (error) {
+    console.error("[RAG] Sentence retrieval failed, continuing without citations:", error.message);
     return [];
   }
 }

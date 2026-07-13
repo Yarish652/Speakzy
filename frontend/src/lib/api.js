@@ -107,3 +107,8 @@ export async function submitReviewResult({ targetWord, correct }) {
   const response = await axiosInstance.post("/ai/review", { targetWord, correct });
   return response.data;
 }
+
+export async function explainSentence({ sentence, question = "" }) {
+  const response = await axiosInstance.post("/ai/explain", { sentence, question });
+  return response.data;
+}

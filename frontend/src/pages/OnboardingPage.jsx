@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { completeOnboarding } from "../lib/api";
 import { LoaderIcon, MapPinIcon, Languages, ShuffleIcon, CameraIcon } from "lucide-react";
 import { LANGUAGES } from "../constants";
+import Footer from "../components/Footer";
 
 const OnboardingPage = () => {
   const { authUser } = useAuthUser();
@@ -52,7 +53,8 @@ const OnboardingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-base-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-base-100 flex flex-col">
+      <div className="flex-1 flex items-center justify-center p-4">
       <div className="card bg-base-200 w-full max-w-3xl shadow-xl">
         <div className="card-body p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">Complete Your Profile</h1>
@@ -242,6 +244,8 @@ const OnboardingPage = () => {
           </form>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

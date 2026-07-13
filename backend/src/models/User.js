@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
       cards: { type: [mongoose.Schema.Types.Mixed], default: [] },
       category: { type: String, default: "" },
     },
+    // Daily quota for the grammar-explain feature (same pattern as flashcards).
+    explainUsage: {
+      count: { type: Number, default: 0 },
+      lastDate: { type: String, default: "" },
+    },
   },
   { timestamps: true }
 );

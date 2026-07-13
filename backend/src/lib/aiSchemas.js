@@ -38,3 +38,15 @@ export const reviewResultSchema = z.object({
   targetWord: z.string().trim().min(1, "targetWord is required").max(100),
   correct: z.boolean(),
 });
+
+// Body for POST /api/ai/explain. Free-text user input headed for an LLM:
+// cap lengths hard (prompt-injection surface area control).
+export const explainRequestSchema = z.object({
+  sentence: z.string().trim().min(1, "sentence is required").max(300),
+  question: z.string().trim().max(200).optional().default(""),
+});
+
+// LLM output shape for grammar explanations.
+export const explanationSchema = z.object({
+  explanation: z.string().trim().min(1).max(2000),
+});

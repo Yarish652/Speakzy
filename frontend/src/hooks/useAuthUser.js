@@ -8,6 +8,12 @@ const useAuthUser = () => {
     retry: false, // auth check
   });
 
-  return { isLoading: authUser.isLoading, authUser: authUser.data?.user };
+  return {
+    isLoading: authUser.isLoading,
+    authUser: authUser.data?.user,
+    // Server-computed (ADMIN_EMAILS). Controls admin UI visibility only —
+    // the /api/admin endpoints enforce access regardless of this flag.
+    isAdmin: Boolean(authUser.data?.isAdmin),
+  };
 };
 export default useAuthUser;
