@@ -6,7 +6,7 @@ import { getFriendRequests } from "../lib/api";
 import useChatStore from "../store/useChatStore";
 
 const Sidebar = ({ onClose }) => {
-  const { authUser } = useAuthUser();
+  const { authUser, isAdmin } = useAuthUser();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -71,20 +71,38 @@ const Sidebar = ({ onClose }) => {
         </Link>
       </nav>
 
-      {/* USER PROFILE SECTION */}
+      {/* USER PROFILE SECTION — for admins the avatar links to /admin
+          (server-verified flag; the API 403s non-admins regardless) */}
       <div className="p-4 border-t border-base-300 mt-auto">
         <div className="flex items-center gap-3">
-          <div className="avatar">
-            <div className="w-10 rounded-full">
-              {authUser?.profilePic ? (
-                <img src={authUser.profilePic} alt={authUser.fullName} />
-              ) : (
-                <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold">{authUser?.fullName?.charAt(0)}</span>
+          {(() => {
+            const avatar = (
+              <div className="avatar">
+                <div className={`w-10 rounded-full ${isAdmin ? "ring ring-primary ring-offset-base-200 ring-offset-1" : ""}`}>
+                  {authUser?.profilePic ? (
+                    <img src={authUser.profilePic} alt={authUser.fullName} />
+                  ) : (
+                    <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold">{authUser?.fullName?.charAt(0)}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            );
+            return isAdmin ? (
+              <Link
+                to="/admin"
+                onClick={onClose}
+                className="tooltip tooltip-right"
+                data-tip="Admin dashboard"
+                aria-label="Admin dashboard"
+              >
+                {avatar}
+              </Link>
+            ) : (
+              avatar
+            );
+          })()}
           <div className="flex-1">
             <p className="font-semibold text-sm">{authUser?.fullName}</p>
             <p className="text-xs text-success flex items-center gap-1">

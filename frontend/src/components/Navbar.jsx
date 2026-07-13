@@ -5,9 +5,23 @@ import ThemeSelector from "./ThemeSelector";
 import useLogout from "../hooks/useLogout";
 
 const Navbar = ({ showSidebar = false, onMenuClick }) => {
-  const { authUser } = useAuthUser();
+  const { authUser, isAdmin } = useAuthUser();
   const location = useLocation();
   const isChatPage = location.pathname?.startsWith("/chat");
+
+  const avatar = (
+    <div className="avatar">
+      <div className={`w-9 rounded-full ${isAdmin ? "ring ring-primary ring-offset-base-200 ring-offset-1" : ""}`}>
+        {authUser?.profilePic ? (
+          <img src={authUser.profilePic} alt={authUser.fullName} />
+        ) : (
+          <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
+            <span className="text-sm font-bold">{authUser?.fullName?.charAt(0)}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   // const queryClient = useQueryClient();
   // const { mutate: logoutMutation } = useMutation({
@@ -55,17 +69,16 @@ const Navbar = ({ showSidebar = false, onMenuClick }) => {
           {/* TODO */}
           <ThemeSelector />
 
-          <div className="avatar">
-            <div className="w-9 rounded-full">
-              {authUser?.profilePic ? (
-                <img src={authUser.profilePic} alt={authUser.fullName} />
-              ) : (
-                <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold">{authUser?.fullName?.charAt(0)}</span>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Admins get a linked avatar into the LLM dashboard; everyone
+              else sees a plain avatar. The flag is server-computed, and the
+              dashboard API 403s non-admins regardless of what's clicked. */}
+          {isAdmin ? (
+            <Link to="/admin" className="tooltip tooltip-bottom" data-tip="Admin dashboard" aria-label="Admin dashboard">
+              {avatar}
+            </Link>
+          ) : (
+            avatar
+          )}
 
           {/* Logout button */}
           <button className="btn btn-ghost btn-circle" onClick={logoutMutation}>

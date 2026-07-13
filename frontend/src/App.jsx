@@ -19,7 +19,7 @@ import { useThemeStore } from "./store/useThemeStore.js";
 import useInitStreamChat from "./hooks/useInitStreamChat.js";
 
 const App = () => {
-  const { isLoading, authUser } = useAuthUser();
+  const { isLoading, authUser, isAdmin } = useAuthUser();
   const { theme } = useThemeStore();
 
   const isAuthenticated = Boolean(authUser);
@@ -104,15 +104,17 @@ const App = () => {
           }
         />
 
+        {/* Route gate uses the server-computed isAdmin flag; the stats API
+            itself 403s non-admins, so this is UX, not the security boundary. */}
         <Route
           path="/admin"
           element={
-            isAuthenticated && isOnboarded ? (
+            isAuthenticated && isOnboarded && isAdmin ? (
               <Layout showSidebar={true}>
                 <AdminStatsPage />
               </Layout>
             ) : (
-              <Navigate to={!isAuthenticated ? "/login" : "/onboarding"} />
+              <Navigate to={!isAuthenticated ? "/login" : "/"} />
             )
           }
         />

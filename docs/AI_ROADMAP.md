@@ -359,7 +359,7 @@ What doesn't / accepted gaps:
 - [ ] Manual: explanation grounded, citation links resolve on tatoeba.org — NOTE: today the query embedding will 429 (daily quota spent on ingestion) so citations degrade to [] gracefully; full check after the quota resets (~midnight PT)
 - [ ] Prompt-injection spot check: adversarial question stays on grammar
 - [x] `LlmCall` docs with `feature: "grammar"` + meta.citationCount (test-covered); cost per query: gpt-4o-mini at ~400-600 tokens ≈ well under $0.01
-- [x] Tatoeba attribution in README (corpus section + license) and in the modal footer (CC-BY 2.0 FR)
+- [x] Tatoeba attribution in README (corpus section + license), the modal footer, and the global app footer (CC-BY 2.0 FR). Deep-dive doc: PHASE_4_GRAMMAR_TUTOR.md
 
 **Gate results (fill in):**
 ```

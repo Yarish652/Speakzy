@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 const Layout = ({ children, showSidebar = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,7 +33,12 @@ const Layout = ({ children, showSidebar = false }) => {
 
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar showSidebar={showSidebar} onMenuClick={() => setSidebarOpen((o) => !o)} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* Footer lives inside the scroll area: short pages pin it to the
+            bottom, long pages show it after the content. */}
+        <main className="flex-1 overflow-y-auto flex flex-col">
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </main>
       </div>
     </div>
   );
