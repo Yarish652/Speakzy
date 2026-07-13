@@ -45,6 +45,7 @@ Speakzy pairs people who want to learn each other's languages. You pick your nat
 - **Study tracking** - every card you reveal is recorded server-side, so your "words studied" stats follow your account across devices (and feed personalization).
 - **RAG-personalized generation** - new flashcard sets are grounded in your study history: words you've already studied are excluded (prompt rule + server-side post-filter with one replacement retry), and words you know that are semantically related to the day's theme are retrieved by vector similarity and woven into example sentences (comprehensible input). Degrades gracefully on cold start or when embeddings are unconfigured.
 - **Spaced-repetition review deck (Leitner system)** - studied words come back for revision at growing intervals (1/2/4/7/14 days); right answers push a word up a box, wrong answers reset it to tomorrow. Cards replay from stored snapshots - the review loop makes zero LLM calls.
+- **Grammar tutor with citations** - tap "Why is this sentence built this way?" on any flashcard example and get a beginner-level grammar explanation grounded in real Tatoeba sentences retrieved by vector similarity, each cited with a link to the source. Free-text follow-up questions are length-capped and instruction-fenced; 10 explanations/day per user.
 - **Theming** with a daisyUI theme selector, and a responsive layout that stacks cleanly on mobile.
 
 **Where this is heading:** retrieval-augmented personalized flashcards, a citation-backed grammar tutor, LLM observability, and a CI eval suite - see the [AI Roadmap](docs/AI_ROADMAP.md).
@@ -224,6 +225,7 @@ All protected routes require the JWT cookie set at login.
 | GET    | `/study/today`      | Distinct words studied today (account-wide) |
 | GET    | `/review`           | Due revision cards (Leitner scheduling, LLM-free) |
 | POST   | `/review`           | Submit a review result (moves the word between boxes) |
+| POST   | `/explain`          | Grammar explanation with Tatoeba citations (daily quota) |
 
 ### Admin - `/api/admin`
 | Method | Endpoint     | Description |
@@ -248,6 +250,21 @@ An [AI Roadmap](docs/AI_ROADMAP.md) documents the next phases: RAG-personalized 
 
 ---
 
+## Grammar corpus (Tatoeba)
+
+The grammar tutor retrieves from a corpus of Tatoeba sentence pairs. To ingest a language pair (needs `MONGO_URI` + `GEMINI_API_KEY`):
+
+```bash
+cd backend
+node scripts/ingest-tatoeba.js --target=fra --native=eng --limit=1000
+```
+
+The script downloads a Tatoeba-derived pair file, filters to beginner-length sentences, embeds them (rate-limit-paced for the free tier), and upserts idempotently - re-run any time to grow the corpus. In production, create an Atlas vector index named `grammarsentence_embedding` (path `embedding`, 768 dims, cosine, filter field `pair`) and set `VECTOR_DRIVER=atlas`.
+
+**Attribution:** example sentences are from [Tatoeba](https://tatoeba.org) contributors, licensed [CC-BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/), via the pair files at [manythings.org/anki](https://www.manythings.org/anki/). Attribution is also shown in the app wherever sentences appear.
+
+---
+
 ## License
 
-ISC - this is a personal learning project.
+ISC - this is a personal learning project. Tatoeba sentence data is CC-BY 2.0 FR (see above).

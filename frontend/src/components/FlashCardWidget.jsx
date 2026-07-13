@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { SparklesIcon, RotateCcwIcon, CheckIcon, RefreshCwIcon } from "lucide-react";
+import { SparklesIcon, RotateCcwIcon, CheckIcon, RefreshCwIcon, GraduationCapIcon } from "lucide-react";
+import GrammarExplainModal from "./GrammarExplainModal";
 import toast from "react-hot-toast";
 import { getFlashcards, getNextFlashcards } from "../lib/api";
 import useAuthUser from "../hooks/useAuthUser";
@@ -53,6 +54,7 @@ const FlashcardWidget = () => {
   const [cardIndex, setCardIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [knownSet, setKnownSet] = useState(new Set());
+  const [explaining, setExplaining] = useState(false);
  
   // Stable query key: the GET endpoint itself decides whether to serve a
   // cached set or generate a new one, so we no longer need a refreshKey
@@ -204,6 +206,15 @@ const FlashcardWidget = () => {
                   {card.exampleNative && (
                     <p className="text-xs text-base-content/40">{card.exampleNative}</p>
                   )}
+                  {card.exampleTarget && (
+                    <button
+                      className="btn btn-ghost btn-xs gap-1.5 mt-2 text-base-content/60"
+                      onClick={() => setExplaining(true)}
+                    >
+                      <GraduationCapIcon className="size-3.5" />
+                      Why is this sentence built this way?
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -266,6 +277,10 @@ const FlashcardWidget = () => {
             Retry
           </button>
         </div>
+      )}
+
+      {explaining && card?.exampleTarget && (
+        <GrammarExplainModal sentence={card.exampleTarget} onClose={() => setExplaining(false)} />
       )}
     </div>
   );
