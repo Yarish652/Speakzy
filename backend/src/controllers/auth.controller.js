@@ -9,7 +9,7 @@ export async function signup(req, res) {
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
+      return res.status(400).json({ message: "Email already exists, please use a different one" });
     }
 
     const randomSeed = Math.random().toString(36).substring(2, 15);

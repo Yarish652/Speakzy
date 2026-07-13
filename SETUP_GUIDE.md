@@ -9,8 +9,9 @@ PORT=5000
 NODE_ENV=development
 MONGO_URI=mongodb://localhost:27017/speakzy
 JWT_SECRET_KEY=your_jwt_secret_key_change_this_in_production
-STEAM_API_KEY=your_stream_api_key_here
-STEAM_API_SECRET=your_stream_api_secret_here
+STREAM_API_KEY=your_stream_api_key_here
+STREAM_API_SECRET=your_stream_api_secret_here
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
 ### Configure These Values:
@@ -22,7 +23,7 @@ STEAM_API_SECRET=your_stream_api_secret_here
 2. **JWT_SECRET_KEY**: Generate a strong secret for JWT tokens
    - Use: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
-3. **STEAM_API_KEY & STEAM_API_SECRET**: Get from Stream.io dashboard
+3. **STREAM_API_KEY & STREAM_API_SECRET**: Get from Stream.io dashboard
    - Sign up at https://getstream.io/
    - Create an app and get your API Key and Secret
 
