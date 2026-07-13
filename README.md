@@ -12,17 +12,21 @@ Speakzy pairs people who want to learn each other's languages. You pick your nat
 
 ## Screenshots
 
-<!--
-Add screenshots or a short GIF here - this is the first thing a viewer looks at.
-Suggested shots: onboarding, the friends/discover page, a live chat with the
-video-call button, and the AI flashcard widget on the home page.
+**Home - AI daily vocab with study stats and daily goal:**
 
-![Home & flashcards](docs/screenshots/home.png)
-![Real-time chat](docs/screenshots/chat.png)
-![Discover learners](docs/screenshots/friends.png)
--->
+![Home: daily vocab flashcards and study stats](docs/screenshots/home.png)
 
-_Screenshots coming soon._
+**Spaced-repetition review deck (Leitner system, zero LLM calls):**
+
+![Review deck below the daily flashcards](docs/screenshots/review.png)
+
+**Find language partners and manage friends:**
+
+![Friends page with partner recommendations](docs/screenshots/friends.png)
+
+**Admin LLM observability - latency percentiles, cache-hit rate, cost per model:**
+
+![Admin dashboard with per-model LLM stats](docs/screenshots/admin.png)
 
 ---
 
