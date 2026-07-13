@@ -26,3 +26,6 @@ dist-ssr
 .env
 credentials/
 backend/public/
+
+# eval run output (baselines/ IS committed - it's the regression reference)
+backend/evals/results/

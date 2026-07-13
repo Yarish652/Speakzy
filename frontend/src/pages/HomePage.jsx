@@ -1,5 +1,6 @@
 import useAuthUser from "../hooks/useAuthUser";
 import FlashCardWidget from "../components/FlashCardWidget";
+import ReviewWidget from "../components/ReviewWidget";
 import HomeAside from "../components/HomeAside";
 
 function getGreeting() {
@@ -25,9 +26,10 @@ const HomePage = () => {
 
       {/* Two-column layout — stacks on mobile, side-by-side on lg+ */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Flashcard — full width on mobile, capped on desktop */}
-        <div className="w-full lg:flex-1 lg:min-w-0 lg:max-w-lg">
+        {/* Flashcard + review deck — full width on mobile, capped on desktop */}
+        <div className="w-full lg:flex-1 lg:min-w-0 lg:max-w-lg flex flex-col gap-6">
           <FlashCardWidget />
+          <ReviewWidget />
         </div>
 
         {/* Stats aside */}

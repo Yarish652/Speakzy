@@ -1,24 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SparklesIcon, RotateCcwIcon, CheckIcon, RefreshCwIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { getFlashcards, getNextFlashcards } from "../lib/api";
 import useAuthUser from "../hooks/useAuthUser";
+import { useStudyStats } from "../context/StudyStatsContext";
 import { capitialize } from "../lib/utils";
-
+ 
+// Must match backend/src/controllers/ai.controller.js DAILY_LIMIT
+const DAILY_LIMIT = 5;
+ 
+// HomeAside reads its "Sessions today" / "Words studied" / "Daily goal" stats
+// straight off the cached authUser.flashcardUsage. The flashcards endpoints
+// don't return the full user object, just { flashcards, remaining }, so we
+// patch the authUser cache in place whenever remaining changes. This keeps
+// HomeAside in sync immediately instead of waiting for a refetch/refresh.
+function syncAuthUserFlashcardUsage(queryClient, remaining) {
+  if (remaining == null) return;
+  const newCount = DAILY_LIMIT - remaining;
+  const today = new Date().toISOString().split("T")[0];
+ 
+  queryClient.setQueryData(["authUser"], (old) => {
+    if (!old?.user) return old;
+    // avoid pointless re-renders / effect loops if nothing actually changed
+    if (old.user.flashcardUsage?.count === newCount && old.user.flashcardUsage?.lastDate === today) {
+      return old;
+    }
+    return {
+      ...old,
+      user: {
+        ...old.user,
+        flashcardUsage: {
+          ...old.user.flashcardUsage,
+          count: newCount,
+          lastDate: today,
+        },
+      },
+    };
+  });
+}
+ 
 const CATEGORY_EMOJI = {
   food: "🍎", travel: "✈️", family: "👨‍👩‍👧", university: "🎓", shopping: "🛍️",
   work: "💼", numbers: "🔢", greetings: "👋", emotions: "😊", body: "🫀",
   home: "🏠", time: "⏰",
 };
-
+ 
 const FlashcardWidget = () => {
   const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
+  const { markWordStudied } = useStudyStats();
   const [cardIndex, setCardIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [knownSet, setKnownSet] = useState(new Set());
-
+ 
   // Stable query key: the GET endpoint itself decides whether to serve a
   // cached set or generate a new one, so we no longer need a refreshKey
   // to force a refetch — mutations below update this cache directly instead.
@@ -28,11 +63,21 @@ const FlashcardWidget = () => {
     retry: false,
     staleTime: Infinity,
   });
-
+ 
+  // Whenever the flashcards query resolves (first load of the day, or a
+  // freshly generated set), mirror the updated session count into the
+  // authUser cache so HomeAside's stats update without a page refresh.
+  useEffect(() => {
+    if (data?.remaining != null) {
+      syncAuthUserFlashcardUsage(queryClient, data.remaining);
+    }
+  }, [data?.remaining, queryClient]);
+ 
   const { mutate: nextLessonMutation, isPending: isGeneratingNext } = useMutation({
     mutationFn: getNextFlashcards,
     onSuccess: (newData) => {
       queryClient.setQueryData(["flashcards"], newData);
+      syncAuthUserFlashcardUsage(queryClient, newData.remaining);
       setCardIndex(0);
       setFlipped(false);
       setKnownSet(new Set());
@@ -45,52 +90,59 @@ const FlashcardWidget = () => {
       }
     },
   });
-
+ 
   const flashcards = data?.flashcards || [];
   const remaining = data?.remaining ?? null;
   const limitReached = (error?.response?.status === 429) || remaining === 0;
   const card = flashcards[cardIndex];
-
+ 
   const category = card?.category || flashcards[0]?.category || "";
   const emoji = CATEGORY_EMOJI[category?.toLowerCase()] || "📚";
   const known = knownSet.size;
   const total = flashcards.length || 5;
   const progress = total > 0 ? Math.round((known / total) * 100) : 0;
-
+ 
   const goNext = () => {
     setFlipped(false);
     setTimeout(() => setCardIndex((i) => (i + 1) % flashcards.length), 120);
   };
 
+  // Revealing a card is the moment the user actually studies that word.
+  const handleReveal = () => {
+    markWordStudied(card);
+    setFlipped(true);
+  };
+ 
   const handleIKnewIt = () => {
+    markWordStudied(card, { knewIt: true });
     setKnownSet((prev) => new Set(prev).add(cardIndex));
     goNext();
   };
-
+ 
   const handleReviewAgain = () => {
     goNext();
   };
-
+ 
   const handleNextLesson = () => {
     nextLessonMutation();
   };
-
+ 
   const canNextLesson = (remaining === null || remaining > 0) && !isGeneratingNext;
-
+ 
   return (
     <div className="card bg-base-200 p-5 gap-5">
       <div className="flex items-center gap-2">
         <SparklesIcon className="size-5 text-primary" />
         <h2 className="font-bold text-lg">Daily Vocab</h2>
       </div>
-
+ 
       {(isLoading || isFetching) && (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <span className="loading loading-spinner loading-lg text-primary" />
           <p className="text-sm text-base-content/50">Generating your cards...</p>
         </div>
       )}
-
+ 
       {!isFetching && limitReached && (
         <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
           <span className="text-5xl">🌙</span>
@@ -100,7 +152,7 @@ const FlashcardWidget = () => {
           </p>
         </div>
       )}
-
+ 
       {!isLoading && !isFetching && !limitReached && card && (
         <>
           <div className="flex items-center justify-between">
@@ -113,14 +165,14 @@ const FlashcardWidget = () => {
               <span className="text-base-content/40"> / {total}</span>
             </span>
           </div>
-
+ 
           <div className="h-1.5 w-full rounded-full bg-base-300 overflow-hidden -mt-2">
             <div
               className="h-full rounded-full bg-success transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-
+ 
           <div className="rounded-2xl bg-base-300 overflow-hidden">
             <div className="flex items-center justify-end gap-1.5 px-4 py-2.5 border-b border-base-content/10">
               {card.partOfSpeech && (
@@ -130,7 +182,7 @@ const FlashcardWidget = () => {
                 <span className="badge badge-success badge-xs">{card.difficulty}</span>
               )}
             </div>
-
+ 
             <div className="flex flex-col items-center justify-center px-6 py-10 text-center min-h-48 gap-2">
               {!flipped ? (
                 <>
@@ -155,10 +207,10 @@ const FlashcardWidget = () => {
                 </>
               )}
             </div>
-
+ 
             <div className="px-4 pb-4">
               {!flipped ? (
-                <button className="btn btn-primary w-full" onClick={() => setFlipped(true)}>
+                <button className="btn btn-primary w-full" onClick={handleReveal}>
                   Reveal answer
                 </button>
               ) : (
@@ -175,7 +227,7 @@ const FlashcardWidget = () => {
               )}
             </div>
           </div>
-
+ 
           <div className="flex justify-center gap-1.5">
             {flashcards.map((_, i) => (
               <button
@@ -191,7 +243,7 @@ const FlashcardWidget = () => {
               />
             ))}
           </div>
-
+ 
           <button
             className="btn btn-outline btn-sm w-full gap-2"
             onClick={handleNextLesson}
@@ -206,7 +258,7 @@ const FlashcardWidget = () => {
           </button>
         </>
       )}
-
+ 
       {isError && !limitReached && (
         <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
           <p className="text-sm text-error">Failed to load cards. Please try again.</p>
@@ -218,5 +270,5 @@ const FlashcardWidget = () => {
     </div>
   );
 };
-
+ 
 export default FlashcardWidget;

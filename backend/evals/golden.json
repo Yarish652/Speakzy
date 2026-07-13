@@ -1,0 +1,18 @@
+[
+  { "id": "en-fr-food", "nativeLanguage": "english", "learningLanguage": "french", "category": "food", "nonLatin": false, "judge": true },
+  { "id": "en-fr-food-exclusions", "nativeLanguage": "english", "learningLanguage": "french", "category": "food", "nonLatin": false, "excludeWords": ["pain", "eau", "fromage", "pomme", "lait"] },
+  { "id": "en-es-travel", "nativeLanguage": "english", "learningLanguage": "spanish", "category": "travel", "nonLatin": false, "judge": true },
+  { "id": "en-de-work", "nativeLanguage": "english", "learningLanguage": "german", "category": "work", "nonLatin": false },
+  { "id": "en-it-family", "nativeLanguage": "english", "learningLanguage": "italian", "category": "family", "nonLatin": false },
+  { "id": "en-pt-emotions", "nativeLanguage": "english", "learningLanguage": "portuguese", "category": "emotions", "nonLatin": false },
+  { "id": "en-ja-greetings", "nativeLanguage": "english", "learningLanguage": "japanese", "category": "greetings", "nonLatin": true, "judge": true },
+  { "id": "en-zh-numbers", "nativeLanguage": "english", "learningLanguage": "chinese", "category": "numbers", "nonLatin": true, "judge": true },
+  { "id": "en-ko-shopping", "nativeLanguage": "english", "learningLanguage": "korean", "category": "shopping", "nonLatin": true },
+  { "id": "en-hi-home", "nativeLanguage": "english", "learningLanguage": "hindi", "category": "home", "nonLatin": true, "judge": true },
+  { "id": "en-ru-university", "nativeLanguage": "english", "learningLanguage": "russian", "category": "university", "nonLatin": true, "judge": true },
+  { "id": "en-ar-family", "nativeLanguage": "english", "learningLanguage": "arabic", "category": "family", "nonLatin": true },
+  { "id": "en-el-food", "nativeLanguage": "english", "learningLanguage": "greek", "category": "food", "nonLatin": true },
+  { "id": "en-th-travel", "nativeLanguage": "english", "learningLanguage": "thai", "category": "travel", "nonLatin": true },
+  { "id": "fr-en-food", "nativeLanguage": "french", "learningLanguage": "english", "category": "food", "nonLatin": false, "judge": true },
+  { "id": "hi-en-greetings", "nativeLanguage": "hindi", "learningLanguage": "english", "category": "greetings", "nonLatin": false, "judge": true }
+]
