@@ -36,57 +36,57 @@ const HomeAside = () => {
   return (
     <aside className="flex flex-col gap-4 w-full lg:w-72 lg:shrink-0">
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-base-200 border border-base-300 p-4">
-          <Flame className="size-5 text-primary" />
-          <p className="mt-3 text-2xl font-semibold tracking-tight">{sessionsToday}</p>
-          <p className="text-xs text-base-content/50">Sessions today</p>
+      {/* Stats grid — varied styling */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="stat-card-primary">
+          <Flame className="size-5 text-indigo-600" />
+          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{sessionsToday}</p>
+          <p className="text-xs text-slate-600 font-medium mt-1">Sessions today</p>
         </div>
-        <div className="rounded-2xl bg-base-200 border border-base-300 p-4">
-          <BookOpen className="size-5 text-primary" />
-          <p className="mt-3 text-2xl font-semibold tracking-tight">{wordsStudied}</p>
-          <p className="text-xs text-base-content/50">Words studied</p>
+        <div className="stat-card-secondary">
+          <BookOpen className="size-5 text-indigo-600" />
+          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{wordsStudied}</p>
+          <p className="text-xs text-slate-600 font-medium mt-1">Words studied</p>
         </div>
       </div>
 
       {/* Daily goal */}
-      <div className="rounded-2xl bg-base-200 border border-base-300 p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">Daily goal</h3>
-          <span className="text-xs text-base-content/50">{sessionsToday} / 5 sessions</span>
+      <div className="surface-elevated p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-900">Daily goal</h3>
+          <span className="text-xs font-semibold text-slate-600">{sessionsToday} / 5 sessions</span>
         </div>
-        <div className="h-2 w-full rounded-full bg-base-300 overflow-hidden">
+        <div className="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden shadow-sm">
           <div
-            className="h-full rounded-full bg-success transition-all duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 shadow-md"
             style={{ width: `${dailyProgress}%` }}
           />
         </div>
-        <p className="mt-3 text-xs text-base-content/50">
+        <p className="mt-4 text-xs text-slate-600 leading-relaxed">
           {sessionsToday === 0
             ? "Start your first lesson to hit today's goal."
             : sessionsToday < 5
             ? `${5 - sessionsToday} more session${5 - sessionsToday !== 1 ? "s" : ""} to hit today's goal.`
-            : "You've hit your daily goal. Great work!"}
+            : "You've hit your daily goal. Great work! 🎉"}
         </p>
       </div>
 
       {/* Quick actions */}
-      <div className="rounded-2xl bg-base-200 border border-base-300 p-2">
+      <div className="flex flex-col gap-2">
         {quickActions.map((action) => (
           <Link
             key={action.label}
             to={action.to}
-            className="flex items-center gap-3 rounded-xl p-3 hover:bg-base-300 transition-colors"
+            className="action-item bg-white border border-slate-200/50 shadow-sm hover:shadow-md"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-base-300">
-              <action.icon className="size-4 text-base-content/70" />
+            <span className="action-icon">
+              <action.icon className="size-5" />
             </span>
             <span className="flex-1 leading-tight min-w-0">
-              <span className="block text-sm font-medium">{action.label}</span>
-              <span className="block text-xs text-base-content/50 truncate">{action.desc}</span>
+              <span className="block text-sm font-semibold text-slate-900">{action.label}</span>
+              <span className="block text-xs text-slate-600 truncate">{action.desc}</span>
             </span>
-            <ArrowRight className="size-4 text-base-content/30 shrink-0" />
+            <ArrowRight className="size-4 text-slate-400 shrink-0" />
           </Link>
         ))}
       </div>
