@@ -15,13 +15,13 @@ const HomePage = () => {
   const firstName = authUser?.fullName?.split(" ")[0] || "there";
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 min-h-full">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-full bg-gradient-to-b from-slate-50 to-white">
       {/* Greeting */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           {getGreeting()}, {firstName} 👋
         </h1>
-        <p className="text-sm text-base-content/50 mt-0.5">Welcome back. Keep up the great work!</p>
+        <p className="text-sm text-slate-600 mt-1 font-medium">Welcome back. Keep up the great work!</p>
       </div>
 
       {/* Two-column layout — stacks on mobile, side-by-side on lg+ */}
