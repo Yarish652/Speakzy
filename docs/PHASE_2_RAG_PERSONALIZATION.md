@@ -24,8 +24,8 @@ Two learning-science ideas drive the fix:
   (water), the example sentence for a new word should try to use "eau".
 
 And one engineering idea: **this is what RAG actually is** — retrieval
-shaping generation. Not "chat with a PDF": retrieval of *your* study history
-shaping *your* next lesson.
+shaping generation. Not "chat with a PDF": retrieval of _your_ study history
+shaping _your_ next lesson.
 
 ---
 
@@ -33,7 +33,7 @@ shaping *your* next lesson.
 
 ### 2.1 Embeddings: `backend/src/lib/embeddings.js`
 
-Words are compared by *meaning*, not spelling, using text embeddings —
+Words are compared by _meaning_, not spelling, using text embeddings —
 vectors where semantically similar texts land close together. Provider:
 Google `gemini-embedding-001` (free tier).
 
@@ -66,10 +66,10 @@ vectors at all.
 
 One interface, two implementations, chosen by `VECTOR_DRIVER`:
 
-| Driver | How | When |
-|---|---|---|
+| Driver             | How                                                             | When                                                                                                                                    |
+| ------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `memory` (default) | Fetch the user's word vectors, cosine in Node, sort, take top-k | A user knows at most a few hundred words — brute force is microseconds, needs no index, and runs identically in CI, local dev, and prod |
-| `atlas` | MongoDB Atlas `$vectorSearch` aggregation | When a corpus outgrows brute force — Phase 4's ~50k Tatoeba sentences. Requires a vector index created in the Atlas UI |
+| `atlas`            | MongoDB Atlas `$vectorSearch` aggregation                       | When a corpus outgrows brute force — Phase 4's ~50k Tatoeba sentences. Requires a vector index created in the Atlas UI                  |
 
 This is the interview answer to "why didn't you use Pinecone?": **vector
 databases exist for corpora too big to scan; a per-user corpus of hundreds
@@ -147,7 +147,7 @@ Why Leitner and not Anki's SM-2: SM-2 has magic constants (ease factors,
 
 ### 2.6 Legacy-data edge case worth remembering
 
-Words studied *before* Phase 2.5 have no `nextReviewAt` field in the DB
+Words studied _before_ Phase 2.5 have no `nextReviewAt` field in the DB
 (schema defaults only apply to new documents — Mongoose applies them on
 hydration in memory, but the DB field stays absent, so date queries miss
 them). Fix: the due-query treats a missing `nextReviewAt` as due now
@@ -158,16 +158,16 @@ field with a default does NOT backfill existing rows.
 
 ## 3. Design decisions and tradeoffs (interview gold)
 
-| Decision | Alternative rejected | Why |
-|---|---|---|
-| Brute-force cosine for user words | Vector DB / Atlas index everywhere | Hundreds of vectors: scan is microseconds; identical behavior in CI; index is one env var away when justified |
-| Exclusion via prompt AND post-filter | Trust the prompt | Models ignore instructions nondeterministically; the filter is the guarantee, the prompt just raises the hit rate |
-| One retry, then serve what survived | Loop until 5 clean cards | Bounded cost and latency; a repeated word is a UX blemish, an infinite retry loop is an outage |
-| 768-dim truncation | Native 3072 dims | 4x smaller storage and faster cosine; Matryoshka training makes truncation nearly lossless for this use |
-| Category vector cached per process | Re-embed per request | 10 fixed categories; failures NOT cached so a transient outage doesn't disable retrieval until restart |
-| Leitner over SM-2 | Anki's algorithm | Explainable > sophisticated for a portfolio; swap is localized in one controller |
-| Snapshot cards at study time | Regenerate for review | Regeneration costs money and produces a DIFFERENT card; the review promise is "the card you saw" |
-| Reviews bump study counters | Separate review stats | Reviewing IS studying; keeps "Words studied today" honest and feeds knewIt back into the data |
+| Decision                             | Alternative rejected               | Why                                                                                                               |
+| ------------------------------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Brute-force cosine for user words    | Vector DB / Atlas index everywhere | Hundreds of vectors: scan is microseconds; identical behavior in CI; index is one env var away when justified     |
+| Exclusion via prompt AND post-filter | Trust the prompt                   | Models ignore instructions nondeterministically; the filter is the guarantee, the prompt just raises the hit rate |
+| One retry, then serve what survived  | Loop until 5 clean cards           | Bounded cost and latency; a repeated word is a UX blemish, an infinite retry loop is an outage                    |
+| 768-dim truncation                   | Native 3072 dims                   | 4x smaller storage and faster cosine; Matryoshka training makes truncation nearly lossless for this use           |
+| Category vector cached per process   | Re-embed per request               | 10 fixed categories; failures NOT cached so a transient outage doesn't disable retrieval until restart            |
+| Leitner over SM-2                    | Anki's algorithm                   | Explainable > sophisticated for a portfolio; swap is localized in one controller                                  |
+| Snapshot cards at study time         | Regenerate for review              | Regeneration costs money and produces a DIFFERENT card; the review promise is "the card you saw"                  |
+| Reviews bump study counters          | Separate review stats              | Reviewing IS studying; keeps "Words studied today" honest and feeds knewIt back into the data                     |
 
 ---
 
