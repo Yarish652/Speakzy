@@ -6,6 +6,9 @@ import { explainSentence } from "../lib/api";
 // Grammar tutor modal: RAG-grounded explanation of a flashcard's example
 // sentence, with citations to similar Tatoeba sentences. Citations are
 // CC-BY - the attribution footer is a license requirement, don't remove it.
+
+
+
 const GrammarExplainModal = ({ sentence, onClose }) => {
   const [question, setQuestion] = useState("");
 
@@ -15,6 +18,8 @@ const GrammarExplainModal = ({ sentence, onClose }) => {
     isPending,
     error,
   } = useMutation({ mutationFn: explainSentence });
+
+
 
   // Auto-explain once on mount. Ref-guarded so StrictMode's double-invoked
   // effects can't fire two quota-consuming requests.
