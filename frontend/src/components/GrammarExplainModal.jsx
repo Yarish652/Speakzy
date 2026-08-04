@@ -19,6 +19,14 @@ const GrammarExplainModal = ({ sentence, onClose }) => {
     error,
   } = useMutation({ mutationFn: explainSentence });
 
+  useEffect(() => {
+  console.log("Mutation state:", {
+    isPending,
+    data,
+    error,
+  });
+}, [isPending, data, error]);
+
 
 
   // Auto-explain once on mount. Ref-guarded so StrictMode's double-invoked

@@ -44,12 +44,12 @@ const ReviewWidget = () => {
 
   if (isLoading) {
     return (
-      <div className="card bg-base-200 p-5 gap-4">
+      <div className="rounded-[30px] border border-base-200/80 bg-base-100 p-6 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.2)]">
         <div className="flex items-center gap-2">
           <BrainIcon className="size-5 text-secondary" />
-          <h2 className="font-bold text-lg">Review</h2>
+          <h2 className="text-[1.3rem] font-semibold tracking-[-0.02em] text-base-content">Review</h2>
         </div>
-        <div className="flex justify-center py-8">
+        <div className="flex justify-center py-10">
           <span className="loading loading-spinner text-secondary" />
         </div>
       </div>
@@ -57,43 +57,45 @@ const ReviewWidget = () => {
   }
 
   return (
-    <div className="card bg-base-200 p-5 gap-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BrainIcon className="size-5 text-secondary" />
-          <h2 className="font-bold text-lg">Review</h2>
+    <div className="rounded-[30px] border border-base-200/80 bg-base-100 p-6 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.2)] transition-shadow duration-200 hover:shadow-[0_18px_40px_-24px_rgba(15,23,42,0.24)]">
+      <div className="flex items-center justify-between gap-3 border-b border-base-200/80 pb-4">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+            <BrainIcon className="size-5" />
+          </span>
+          <h2 className="text-[1.3rem] font-semibold tracking-[-0.02em] text-base-content">Review</h2>
         </div>
         {remaining > 0 && (
-          <span className="badge badge-secondary badge-outline tabular-nums">{remaining} due</span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3.5 py-2 text-sm font-semibold text-secondary/90 tabular-nums">{remaining} due</span>
         )}
       </div>
 
       {!card ? (
-        <div className="flex flex-col items-center justify-center py-8 gap-2 text-center">
+        <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
           <span className="text-4xl">✅</span>
           <p className="text-sm font-medium">All caught up!</p>
-          <p className="text-xs text-base-content/50 max-w-xs">
+          <p className="text-xs text-base-content/50 max-w-xs leading-5">
             Words you study come back here for review — first after a day, then at growing
             intervals as you get them right.
           </p>
         </div>
       ) : (
         <>
-          <div className="rounded-2xl bg-base-300 overflow-hidden">
-            <div className="flex flex-col items-center justify-center px-6 py-8 text-center min-h-36 gap-2">
+          <div className="mt-5">
+            <div className="flex min-h-[165px] flex-col items-center gap-3 px-2 py-8 text-center sm:px-8">
               {!flipped ? (
                 <>
-                  <p className="text-3xl font-bold tracking-tight">{card.targetWord}</p>
+                  <p className="break-words text-3xl font-semibold tracking-[-0.03em] text-base-content sm:text-[3.25rem]">{card.targetWord}</p>
                   {card.romanization && (
-                    <p className="text-sm italic text-base-content/50">{card.romanization}</p>
+                    <p className="text-sm tracking-normal text-base-content/60">{card.romanization}</p>
                   )}
-                  <p className="text-xs text-base-content/40 mt-1">Do you remember this word?</p>
+                  <p className="text-xs text-base-content/50 mt-1.5">Do you remember this word?</p>
                 </>
               ) : (
                 <>
-                  <p className="text-2xl font-bold text-secondary">{card.nativeWord || "—"}</p>
+                  <p className="text-3xl sm:text-4xl font-semibold text-secondary">{card.nativeWord || "—"}</p>
                   {card.exampleTarget && (
-                    <p className="text-sm italic text-base-content/70 mt-1">"{card.exampleTarget}"</p>
+                    <p className="text-sm italic text-base-content/70 mt-2">"{card.exampleTarget}"</p>
                   )}
                   {card.exampleNative && (
                     <p className="text-xs text-base-content/40">{card.exampleNative}</p>
@@ -102,35 +104,37 @@ const ReviewWidget = () => {
               )}
             </div>
 
-            <div className="px-4 pb-4">
-              {!flipped ? (
-                <button className="btn btn-secondary btn-sm w-full" onClick={() => setFlipped(true)}>
-                  Show answer
-                </button>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    className="btn btn-outline btn-sm gap-1.5"
-                    disabled={isPending}
-                    onClick={() => answer(false)}
-                  >
-                    <XIcon className="size-3.5" />
-                    Forgot
+            <div className="mt-5 border-t border-base-200/80 px-6 pt-5 pb-5">
+              <div className="flex flex-col gap-3">
+                {!flipped ? (
+                  <button className="btn btn-secondary btn-lg w-full rounded-[18px] px-6 py-3.5 text-base font-semibold shadow-[0_8px_18px_-12px_rgba(219,39,119,0.12)] transition-all duration-200 hover:-translate-y-[0.5px] hover:shadow-[0_12px_24px_-14px_rgba(219,39,119,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-base-100" onClick={() => setFlipped(true)}>
+                    Show answer
                   </button>
-                  <button
-                    className="btn btn-success btn-sm gap-1.5"
-                    disabled={isPending}
-                    onClick={() => answer(true)}
-                  >
-                    <CheckIcon className="size-3.5" />
-                    Got it
-                  </button>
-                </div>
-              )}
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      className="btn btn-outline btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-base-100"
+                      disabled={isPending}
+                      onClick={() => answer(false)}
+                    >
+                      <XIcon className="size-3.5" />
+                      Forgot
+                    </button>
+                    <button
+                      className="btn btn-success btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-success/90"
+                      disabled={isPending}
+                      onClick={() => answer(true)}
+                    >
+                      <CheckIcon className="size-3.5" />
+                      Got it
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <p className="text-center text-xs text-base-content/40">
+          <p className="mt-4 text-center text-xs text-base-content/40">
             Box {card.box} of 5 — right answers push it further out
           </p>
         </>
