@@ -2,15 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* Premium Hero Card Styles */
+.hero-card {
+  @apply rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 p-7 shadow-2xl;
 }
 
-body {
-  @apply text-base-content font-sans;
+.hero-card-content {
+  @apply flex flex-col gap-6;
 }
 
+/* Premium Surface Treatments */
+.surface-premium {
+  @apply rounded-2xl bg-white/95 backdrop-blur-sm shadow-lg border border-white/20;
+}
+
+.surface-secondary {
+  @apply rounded-2xl bg-slate-50 border border-slate-200/50;
+}
+
+.surface-elevated {
+  @apply rounded-2xl bg-base-200 shadow-md border border-base-300/60;
+}
+
+/* Premium Buttons */
+.btn-premium {
+  @apply font-medium transition-all duration-200 shadow-md hover:shadow-lg active:scale-95;
+}
+
+.btn-premium-primary {
+  @apply btn-premium bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 hover:from-indigo-700 hover:to-purple-700;
+}
+
+/* Premium Progress Bar */
+.progress-premium {
+  @apply rounded-full bg-white/20 overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-500;
+}
+
+/* Premium Badge */
+.badge-premium {
+  @apply inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm border border-white/20;
+}
+
+/* Premium Card Content */
+.card-hero-word {
+  @apply text-5xl font-bold text-white tracking-tight;
+}
+
+.card-hero-section {
+  @apply rounded-2xl bg-white/10 overflow-hidden backdrop-blur-sm border border-white/20;
+}
+
+.card-body-text {
+  @apply text-white text-opacity-95;
+}
+
+/* Micro-interactions */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Premium Shadows */
+.shadow-premium {
+  @apply shadow-2xl;
+}
+
+/* Stats Cards - Varied Styling */
+.stat-card-primary {
+  @apply rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200/50 p-5;
+}
+
+.stat-card-secondary {
+  @apply rounded-2xl bg-white border border-slate-200/50 p-5 shadow-sm;
+}
+
+/* Quick Actions - Refined */
+.action-item {
+  @apply flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 hover:bg-indigo-50 hover:shadow-md;
+}
+
+.action-icon {
+  @apply flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600;
+}
+
+/* String chat styles (existing integrations) */
 .str-chat__channel {
   display: flex;
   align-items: center;

@@ -15,15 +15,13 @@ const HomePage = () => {
   const firstName = authUser?.fullName?.split(" ")[0] || "there";
 
   return (
-    <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-full bg-gradient-to-b from-slate-50 to-white">
       {/* Greeting */}
-      <div className="mb-8 max-w-3xl sm:mb-10">
-        <h1 className="text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-base-content sm:text-5xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           {getGreeting()}, {firstName} 👋
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-base-content/60 sm:text-[0.95rem]">
-          Welcome back. Keep up the great work!
-        </p>
+        <p className="text-sm text-slate-600 mt-1 font-medium">Welcome back. Keep up the great work!</p>
       </div>
 
       {/* Two-column layout — stacks on mobile, side-by-side on lg+ */}
