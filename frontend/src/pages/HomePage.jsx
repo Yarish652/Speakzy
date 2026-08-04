@@ -25,9 +25,9 @@ const HomePage = () => {
       </div>
 
       {/* Two-column layout — stacks on mobile, side-by-side on lg+ */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex flex-col items-start gap-8 lg:flex-row lg:gap-10">
         {/* Flashcard + review deck — full width on mobile, capped on desktop */}
-        <div className="w-full lg:flex-1 lg:min-w-0 lg:max-w-lg flex flex-col gap-6">
+        <div className="flex w-full flex-col gap-5 lg:max-w-[43.5rem] lg:flex-[1.25] lg:min-w-0">
           <FlashCardWidget />
           <ReviewWidget />
         </div>

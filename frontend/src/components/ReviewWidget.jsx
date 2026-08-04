@@ -125,8 +125,27 @@ const ReviewWidget = () => {
                     <CheckIcon className="size-4" />
                     Got it
                   </button>
-                </div>
-              )}
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      className="btn btn-outline btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-base-100"
+                      disabled={isPending}
+                      onClick={() => answer(false)}
+                    >
+                      <XIcon className="size-3.5" />
+                      Forgot
+                    </button>
+                    <button
+                      className="btn btn-success btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-success/90"
+                      disabled={isPending}
+                      onClick={() => answer(true)}
+                    >
+                      <CheckIcon className="size-3.5" />
+                      Got it
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

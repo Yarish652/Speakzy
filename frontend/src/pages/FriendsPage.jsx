@@ -65,13 +65,13 @@ const FriendsPage = () => {
 
         {/* LEFT — Your Friends */}
         <div className="w-full lg:flex-1 lg:min-w-0 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">Your Friends</h2>
-            <Link to="/notifications" className="btn btn-outline btn-sm">
-              <UsersIcon className="size-4 mr-2" />
-              Friend Requests
-            </Link>
-          </div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold tracking-tight text-base-content">Your Friends</h2>
+              <Link to="/notifications" className="btn btn-outline btn-sm">
+                <UsersIcon className="size-4 mr-2" />
+                Friend Requests
+              </Link>
+            </div>
 
           {loadingFriends ? (
             <div className="flex justify-center py-12">
@@ -82,20 +82,20 @@ const FriendsPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {friends.map((friend) => (
-                <div key={friend._id} className="space-y-2">
+                <div key={friend._id}>
                   <FriendCard friend={friend} />
 
                   {confirmingRemoveId === friend._id ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-2">
                       <button
-                        className="btn btn-error btn-xs flex-1"
+                        className="btn btn-error btn-sm flex-1"
                         onClick={() => removeFriendMutation(friend._id)}
                         disabled={isRemoving}
                       >
                         Confirm remove
                       </button>
                       <button
-                        className="btn btn-ghost btn-xs"
+                        className="btn btn-ghost btn-sm"
                         onClick={() => setConfirmingRemoveId(null)}
                         disabled={isRemoving}
                       >
@@ -104,7 +104,7 @@ const FriendsPage = () => {
                     </div>
                   ) : (
                     <button
-                      className="btn btn-outline btn-xs w-full"
+                      className="btn btn-outline btn-sm w-full mt-2"
                       onClick={() => setConfirmingRemoveId(friend._id)}
                     >
                       <UserMinusIcon className="size-3 mr-1" />
@@ -119,7 +119,7 @@ const FriendsPage = () => {
 
         {/* RIGHT — Find Language Partners */}
         <div className="w-full lg:w-80 lg:shrink-0 space-y-4">
-          <h2 className="text-xl font-bold tracking-tight">Find Partners</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-base-content">Find Partners</h2>
 
           {loadingUsers ? (
             <div className="flex justify-center py-8">
@@ -134,11 +134,11 @@ const FriendsPage = () => {
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
                 return (
-                  <div key={user._id} className="card bg-base-200 p-4 space-y-3">
+                  <div key={user._id} className="rounded-[12px] border border-base-200/80 bg-base-100 p-3 space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="avatar size-10 rounded-full shrink-0">
+                      <div className="avatar w-10 h-10 rounded-full shrink-0 overflow-hidden">
                         {user.profilePic ? (
-                          <img src={user.profilePic} alt={user.fullName} className="rounded-full" />
+                          <img src={user.profilePic} alt={user.fullName} className="rounded-full w-full h-full object-cover" />
                         ) : (
                           <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
                             <span className="text-sm font-bold">{user.fullName?.charAt(0)}</span>
@@ -156,7 +156,7 @@ const FriendsPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       <span className="badge badge-secondary badge-sm">
                         {getLanguageFlag(user.nativeLanguage)} {capitialize(user.nativeLanguage)}
                       </span>

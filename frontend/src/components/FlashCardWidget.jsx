@@ -1,29 +1,27 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { SparklesIcon, RotateCcwIcon, CheckIcon, RefreshCwIcon, GraduationCapIcon } from "lucide-react";
+import { SparklesIcon, CheckIcon, RefreshCwIcon, GraduationCapIcon } from "lucide-react";
 import GrammarExplainModal from "./GrammarExplainModal";
 import toast from "react-hot-toast";
 import { getFlashcards, getNextFlashcards } from "../lib/api";
 import useAuthUser from "../hooks/useAuthUser";
 import { useStudyStats } from "../context/StudyStatsContext";
 import { capitialize } from "../lib/utils";
- 
-// Must match backend/src/controllers/ai.controller.js DAILY_LIMIT
+
 const DAILY_LIMIT = 5;
- 
-// HomeAside reads its "Sessions today" / "Words studied" / "Daily goal" stats
-// straight off the cached authUser.flashcardUsage. The flashcards endpoints
-// don't return the full user object, just { flashcards, remaining }, so we
-// patch the authUser cache in place whenever remaining changes. This keeps
-// HomeAside in sync immediately instead of waiting for a refetch/refresh.
+
+const CATEGORY_EMOJI = {
+  food: "🍎", travel: "✈️", family: "👨‍👩‍👧", university: "🎓", shopping: "🛍️",
+  work: "💼", numbers: "🔢", greetings: "👋", emotions: "😊", body: "🫀",
+  home: "🏠", time: "⏰",
+};
+
 function syncAuthUserFlashcardUsage(queryClient, remaining) {
   if (remaining == null) return;
   const newCount = DAILY_LIMIT - remaining;
   const today = new Date().toISOString().split("T")[0];
- 
   queryClient.setQueryData(["authUser"], (old) => {
     if (!old?.user) return old;
-    // avoid pointless re-renders / effect loops if nothing actually changed
     if (old.user.flashcardUsage?.count === newCount && old.user.flashcardUsage?.lastDate === today) {
       return old;
     }
@@ -40,13 +38,7 @@ function syncAuthUserFlashcardUsage(queryClient, remaining) {
     };
   });
 }
- 
-const CATEGORY_EMOJI = {
-  food: "🍎", travel: "✈️", family: "👨‍👩‍👧", university: "🎓", shopping: "🛍️",
-  work: "💼", numbers: "🔢", greetings: "👋", emotions: "😊", body: "🫀",
-  home: "🏠", time: "⏰",
-};
- 
+
 const FlashcardWidget = () => {
   const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
@@ -55,26 +47,20 @@ const FlashcardWidget = () => {
   const [flipped, setFlipped] = useState(false);
   const [knownSet, setKnownSet] = useState(new Set());
   const [explaining, setExplaining] = useState(false);
- 
-  // Stable query key: the GET endpoint itself decides whether to serve a
-  // cached set or generate a new one, so we no longer need a refreshKey
-  // to force a refetch — mutations below update this cache directly instead.
+
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: ["flashcards"],
     queryFn: getFlashcards,
     retry: false,
     staleTime: Infinity,
   });
- 
-  // Whenever the flashcards query resolves (first load of the day, or a
-  // freshly generated set), mirror the updated session count into the
-  // authUser cache so HomeAside's stats update without a page refresh.
+
   useEffect(() => {
     if (data?.remaining != null) {
       syncAuthUserFlashcardUsage(queryClient, data.remaining);
     }
   }, [data?.remaining, queryClient]);
- 
+
   const { mutate: nextLessonMutation, isPending: isGeneratingNext } = useMutation({
     mutationFn: getNextFlashcards,
     onSuccess: (newData) => {
@@ -92,45 +78,45 @@ const FlashcardWidget = () => {
       }
     },
   });
- 
+
   const flashcards = data?.flashcards || [];
   const remaining = data?.remaining ?? null;
   const limitReached = (error?.response?.status === 429) || remaining === 0;
   const card = flashcards[cardIndex];
- 
+
   const category = card?.category || flashcards[0]?.category || "";
   const emoji = CATEGORY_EMOJI[category?.toLowerCase()] || "📚";
   const known = knownSet.size;
   const total = flashcards.length || 5;
-  const progress = total > 0 ? Math.round((known / total) * 100) : 0;
- 
+
   const goNext = () => {
     setFlipped(false);
     setTimeout(() => setCardIndex((i) => (i + 1) % flashcards.length), 120);
   };
 
-  // Revealing a card is the moment the user actually studies that word.
   const handleReveal = () => {
     markWordStudied(card);
     setFlipped(true);
   };
- 
+
   const handleIKnewIt = () => {
     markWordStudied(card, { knewIt: true });
     setKnownSet((prev) => new Set(prev).add(cardIndex));
     goNext();
   };
- 
+
   const handleReviewAgain = () => {
     goNext();
   };
- 
+
   const handleNextLesson = () => {
-    nextLessonMutation();
+    if (!isGeneratingNext) {
+      nextLessonMutation();
+    }
   };
- 
-  const canNextLesson = (remaining === null || remaining > 0) && !isGeneratingNext;
- 
+    const topProgress =
+      total > 0 ? Math.round((knownSet.size / total) * 100) : 0;
+
   return (
     <div className="hero-card hero-card-content">
       <div className="flex items-center justify-between">
@@ -155,9 +141,7 @@ const FlashcardWidget = () => {
             You've completed today's lessons. Come back tomorrow for a fresh set.
           </p>
         </div>
-      )}
- 
-      {!isLoading && !isFetching && !limitReached && card && (
+      ) : card ? (
         <>
           <div className="flex items-center justify-between">
             <span className="badge-premium">
@@ -236,8 +220,29 @@ const FlashcardWidget = () => {
                     <CheckIcon className="size-4" />
                     I knew it
                   </button>
-                </div>
-              )}
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button className="btn btn-outline btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-base-100" onClick={handleReviewAgain}>
+                      <RefreshCwIcon className="size-3.5" />
+                      Review again
+                    </button>
+                    <button className="btn btn-success btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-success/90" onClick={handleIKnewIt}>
+                      <CheckIcon className="size-3.5" />
+                      I knew it
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  className="btn btn-outline btn-lg w-full rounded-[18px] px-6 py-3.5 text-base font-semibold text-base-content transition-colors duration-200 hover:border-base-content/30 hover:bg-base-100 hover:text-base-content"
+                  onClick={handleNextLesson}
+                  disabled={isGeneratingNext}
+                >
+                  Next Lesson
+                </button>
+              </div>
+
+              <div className="mt-5 border-t border-base-200 pt-3 text-center text-xs text-base-content/50">Right answers push it further out</div>
             </div>
           </div>
  
@@ -270,14 +275,12 @@ const FlashcardWidget = () => {
             {canNextLesson ? "Next Lesson" : "Come back tomorrow"}
           </button>
         </>
-      )}
- 
+      ) : null}
+
       {isError && !limitReached && (
         <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
           <p className="text-sm text-error">Failed to load cards. Please try again.</p>
-          <button className="btn btn-sm btn-outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["flashcards"] })}>
-            Retry
-          </button>
+          <button className="btn btn-sm btn-outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["flashcards"] })}>Retry</button>
         </div>
       )}
 

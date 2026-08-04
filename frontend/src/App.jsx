@@ -30,7 +30,7 @@ const App = () => {
   if (isLoading) return <PageLoader />;
 
   return (
-    <div className="h-screen" data-theme={theme}>
+    <div className="h-screen bg-base-200 text-base-content" data-theme={theme}>
       <Routes>
         <Route
           path="/"

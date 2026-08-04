@@ -20,70 +20,56 @@ const Sidebar = ({ onClose }) => {
   const pendingRequests = friendRequests?.incomingReqs?.length || 0;
 
   return (
-    <aside className="w-64 bg-base-200 border-r border-base-300 flex flex-col h-full">
-      <div className="p-5 border-b border-base-300">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Languages className="size-9 text-primary" />
-          <span className="text-3xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary  tracking-wider">
-            Speakzy
-          </span>
+    <aside className="w-64 bg-base-100 border-r border-base-200 flex flex-col h-full">
+      <div className="p-4 border-b border-base-200 h-16 flex items-center">
+        <Link to="/" className="flex items-center gap-2 whitespace-nowrap">
+          <Languages className="size-6 text-primary" />
+          <span className="text-lg font-semibold tracking-wide text-base-content">Speakzy</span>
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-2.5">
         <Link
           to="/"
           onClick={onClose}
-          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
-            currentPath === "/" ? "btn-active" : ""
-          }`}
+          className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-colors duration-200 ${currentPath === "/" ? "bg-primary/5 text-base-content font-semibold" : "text-base-content/80 hover:bg-base-100 hover:text-base-content"}`}
         >
-          <HomeIcon className="size-5 text-base-content opacity-70" />
+          <HomeIcon className="size-5" />
           <span>Home</span>
         </Link>
 
         <Link
           to="/friends"
           onClick={onClose}
-          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
-            currentPath === "/friends" ? "btn-active" : ""
-          }`}
+          className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-colors duration-200 ${currentPath === "/friends" ? "bg-primary/5 text-base-content font-semibold" : "text-base-content/80 hover:bg-base-100 hover:text-base-content"}`}
         >
-          <UsersIcon className="size-5 text-base-content opacity-70" />
+          <UsersIcon className="size-5" />
           <span>Friends</span>
-          {totalUnread > 0 && (
-            <span className="badge badge-primary badge-sm ml-auto">{totalUnread}</span>
-          )}
+          {totalUnread > 0 && <span className="ml-auto inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-[11px] font-semibold">{totalUnread}</span>}
         </Link>
 
         <Link
           to="/notifications"
           onClick={onClose}
-          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
-            currentPath === "/notifications" ? "btn-active" : ""
-          }`}
+          className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-colors duration-200 ${currentPath === "/notifications" ? "bg-primary/5 text-base-content font-semibold" : "text-base-content/80 hover:bg-base-100 hover:text-base-content"}`}
         >
-          <BellIcon className="size-5 text-base-content opacity-70" />
+          <BellIcon className="size-5" />
           <span>Notifications</span>
-          {pendingRequests > 0 && (
-            <span className="badge badge-error badge-sm ml-auto">{pendingRequests}</span>
-          )}
+          {pendingRequests > 0 && <span className="ml-auto inline-flex items-center justify-center w-6 h-6 rounded-full bg-error text-white text-[11px] font-semibold">{pendingRequests}</span>}
         </Link>
       </nav>
 
-      {/* USER PROFILE SECTION — for admins the avatar links to /admin
-          (server-verified flag; the API 403s non-admins regardless) */}
-      <div className="p-4 border-t border-base-300 mt-auto">
+      <div className="p-4 border-t border-base-200 mt-auto">
         <div className="flex items-center gap-3">
           {(() => {
             const avatar = (
               <div className="avatar">
-                <div className={`w-10 rounded-full ${isAdmin ? "ring ring-primary ring-offset-base-200 ring-offset-1" : ""}`}>
+                <div className={`w-10 rounded-full ${isAdmin ? "ring ring-primary ring-offset-base-100 ring-offset-2" : ""}`}>
                   {authUser?.profilePic ? (
                     <img src={authUser.profilePic} alt={authUser.fullName} />
                   ) : (
                     <div className="bg-base-300 w-full h-full rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold">{authUser?.fullName?.charAt(0)}</span>
+                      <span className="text-sm font-semibold">{authUser?.fullName?.charAt(0)}</span>
                     </div>
                   )}
                 </div>
@@ -103,10 +89,10 @@ const Sidebar = ({ onClose }) => {
               avatar
             );
           })()}
-          <div className="flex-1">
-            <p className="font-semibold text-sm">{authUser?.fullName}</p>
-            <p className="text-xs text-success flex items-center gap-1">
-              <span className="size-2 rounded-full bg-success inline-block" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm truncate">{authUser?.fullName}</p>
+            <p className="text-xs text-success flex items-center gap-1 leading-5">
+              <span className="inline-block h-2 w-2 rounded-full bg-success" />
               Online
             </p>
           </div>
