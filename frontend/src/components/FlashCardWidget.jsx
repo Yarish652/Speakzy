@@ -109,8 +109,7 @@ const FlashcardWidget = () => {
     goNext();
   };
 
-  const handleNextLesson = () => {
-    if (!isGeneratingNext) {
+  const handleNextLesson = () => {    if (!isGeneratingNext) {
       nextLessonMutation();
     }
   };
