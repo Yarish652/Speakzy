@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { SparklesIcon, CheckIcon, RefreshCwIcon, GraduationCapIcon } from "lucide-react";
+import { SparklesIcon, CheckIcon, RefreshCwIcon, RotateCcwIcon, GraduationCapIcon } from "lucide-react";
 import GrammarExplainModal from "./GrammarExplainModal";
 import toast from "react-hot-toast";
 import { getFlashcards, getNextFlashcards } from "../lib/api";
@@ -83,11 +83,13 @@ const FlashcardWidget = () => {
   const remaining = data?.remaining ?? null;
   const limitReached = (error?.response?.status === 429) || remaining === 0;
   const card = flashcards[cardIndex];
+  const canNextLesson = remaining > 0 && !isGeneratingNext;
 
   const category = card?.category || flashcards[0]?.category || "";
   const emoji = CATEGORY_EMOJI[category?.toLowerCase()] || "📚";
   const known = knownSet.size;
   const total = flashcards.length || 5;
+  const progress = total > 0 ? Math.round((knownSet.size / total) * 100) : 0;
 
   const goNext = () => {
     setFlipped(false);
@@ -109,12 +111,11 @@ const FlashcardWidget = () => {
     goNext();
   };
 
-  const handleNextLesson = () => {    if (!isGeneratingNext) {
+  const handleNextLesson = () => {
+    if (!isGeneratingNext) {
       nextLessonMutation();
     }
   };
-    const topProgress =
-      total > 0 ? Math.round((knownSet.size / total) * 100) : 0;
 
   return (
     <div className="hero-card hero-card-content">
@@ -132,7 +133,7 @@ const FlashcardWidget = () => {
         </div>
       )}
  
-      {!isFetching && limitReached && (
+      {!isFetching && limitReached ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
           <span className="text-5xl">🌙</span>
           <h3 className="text-lg font-semibold text-white">All done for today!</h3>
@@ -219,27 +220,8 @@ const FlashcardWidget = () => {
                     <CheckIcon className="size-4" />
                     I knew it
                   </button>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <button className="btn btn-outline btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-base-100" onClick={handleReviewAgain}>
-                      <RefreshCwIcon className="size-3.5" />
-                      Review again
-                    </button>
-                    <button className="btn btn-success btn-sm h-12 gap-1.5 rounded-[16px] px-4 transition-colors duration-200 hover:bg-success/90" onClick={handleIKnewIt}>
-                      <CheckIcon className="size-3.5" />
-                      I knew it
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  className="btn btn-outline btn-lg w-full rounded-[18px] px-6 py-3.5 text-base font-semibold text-base-content transition-colors duration-200 hover:border-base-content/30 hover:bg-base-100 hover:text-base-content"
-                  onClick={handleNextLesson}
-                  disabled={isGeneratingNext}
-                >
-                  Next Lesson
-                </button>
-              </div>
+                </div>
+              )}
 
               <div className="mt-5 border-t border-base-200 pt-3 text-center text-xs text-base-content/50">Right answers push it further out</div>
             </div>
