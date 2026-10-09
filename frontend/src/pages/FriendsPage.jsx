@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { UsersIcon, UserPlusIcon, CheckCircleIcon, MapPinIcon, UserMinusIcon } from "lucide-react";
+import { UsersIcon, UserPlusIcon, CheckCircleIcon, MapPinIcon, UserMinusIcon, EllipsisVerticalIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { getUserFriends, getRecommendedUsers, getOutgoingFriendReqs, sendFriendRequest, removeFriend } from "../lib/api";
@@ -59,16 +59,18 @@ const FriendsPage = () => {
     }
   }, [outgoingFriendReqs]);
 
+  const friendToRemove = friends.find((f) => f._id === confirmingRemoveId);
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full">
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+    <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="flex flex-col lg:flex-row gap-8 items-start lg:gap-10">
 
         {/* LEFT — Your Friends */}
-        <div className="w-full lg:flex-1 lg:min-w-0 space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="w-full lg:flex-1 lg:min-w-0 space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl font-semibold tracking-tight text-base-content">Your Friends</h2>
-              <Link to="/notifications" className="btn btn-outline btn-sm">
-                <UsersIcon className="size-4 mr-2" />
+              <Link to="/notifications" className="btn btn-outline btn-sm rounded-xl">
+                <UsersIcon className="size-4" />
                 Friend Requests
               </Link>
             </div>
@@ -82,51 +84,56 @@ const FriendsPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {friends.map((friend) => (
-                <div key={friend._id}>
-                  <FriendCard friend={friend} />
-
-                  {confirmingRemoveId === friend._id ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        className="btn btn-error btn-sm flex-1"
-                        onClick={() => removeFriendMutation(friend._id)}
-                        disabled={isRemoving}
+                <FriendCard
+                  key={friend._id}
+                  friend={friend}
+                  menu={
+                    // Opens on hover (desktop) and on tap/focus (touch, keyboard).
+                    // pt-1 instead of a margin keeps the hover area unbroken
+                    // between the trigger and the menu.
+                    <div className="dropdown dropdown-end dropdown-hover shrink-0">
+                      <div
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`More options for ${friend.fullName}`}
+                        className="btn btn-ghost btn-sm btn-circle text-base-content/60 hover:text-base-content"
                       >
-                        Confirm remove
-                      </button>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => setConfirmingRemoveId(null)}
-                        disabled={isRemoving}
-                      >
-                        Cancel
-                      </button>
+                        <EllipsisVerticalIcon className="size-4" />
+                      </div>
+                      <div tabIndex={0} className="dropdown-content z-20 pt-1">
+                        <ul className="menu w-44 rounded-2xl border border-base-200 bg-base-100 p-1.5 shadow-lg">
+                          <li>
+                            <button
+                              className="text-error"
+                              onClick={() => {
+                                document.activeElement?.blur();
+                                setConfirmingRemoveId(friend._id);
+                              }}
+                            >
+                              <UserMinusIcon className="size-4" />
+                              Remove friend
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
-                  ) : (
-                    <button
-                      className="btn btn-outline btn-sm w-full mt-2"
-                      onClick={() => setConfirmingRemoveId(friend._id)}
-                    >
-                      <UserMinusIcon className="size-3 mr-1" />
-                      Remove friend
-                    </button>
-                  )}
-                </div>
+                  }
+                />
               ))}
             </div>
           )}
         </div>
 
         {/* RIGHT — Find Language Partners */}
-        <div className="w-full lg:w-80 lg:shrink-0 space-y-4">
-          <h2 className="text-xl font-semibold tracking-tight text-base-content">Find Partners</h2>
+        <div className="w-full lg:w-80 lg:shrink-0 space-y-5">
+          <h2 className="text-2xl font-semibold tracking-tight text-base-content">Find Partners</h2>
 
           {loadingUsers ? (
             <div className="flex justify-center py-8">
               <span className="loading loading-spinner loading-md" />
             </div>
           ) : recommendedUsers.length === 0 ? (
-            <div className="card bg-base-200 p-4 text-center">
+            <div className="rounded-3xl border border-base-200/80 bg-base-100 p-6 text-center shadow-[0_8px_24px_-18px_rgba(15,23,42,0.16)]">
               <p className="text-sm text-base-content/60">No new people to discover right now.</p>
             </div>
           ) : (
@@ -134,9 +141,9 @@ const FriendsPage = () => {
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
                 return (
-                  <div key={user._id} className="rounded-[12px] border border-base-200/80 bg-base-100 p-3 space-y-3">
+                  <div key={user._id} className="rounded-3xl border border-base-200/80 bg-base-100 p-4 space-y-3 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.16)]">
                     <div className="flex items-center gap-3">
-                      <div className="avatar w-10 h-10 rounded-full shrink-0 overflow-hidden">
+                      <div className="avatar size-11 rounded-full shrink-0 overflow-hidden">
                         {user.profilePic ? (
                           <img src={user.profilePic} alt={user.fullName} className="rounded-full w-full h-full object-cover" />
                         ) : (
@@ -156,7 +163,7 @@ const FriendsPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       <span className="badge badge-secondary badge-sm">
                         {getLanguageFlag(user.nativeLanguage)} {capitialize(user.nativeLanguage)}
                       </span>
@@ -166,18 +173,18 @@ const FriendsPage = () => {
                     </div>
 
                     <button
-                      className={`btn btn-sm w-full ${hasRequestBeenSent ? "btn-disabled" : "btn-primary"}`}
+                      className={`btn btn-sm w-full rounded-xl ${hasRequestBeenSent ? "btn-disabled" : "btn-primary"}`}
                       onClick={() => sendRequestMutation(user._id)}
                       disabled={hasRequestBeenSent || isPending}
                     >
                       {hasRequestBeenSent ? (
                         <>
-                          <CheckCircleIcon className="size-3 mr-1" />
+                          <CheckCircleIcon className="size-4" />
                           Request Sent
                         </>
                       ) : (
                         <>
-                          <UserPlusIcon className="size-3 mr-1" />
+                          <UserPlusIcon className="size-4" />
                           Send Request
                         </>
                       )}
@@ -190,6 +197,37 @@ const FriendsPage = () => {
         </div>
 
       </div>
+
+      {/* Remove-friend confirmation (same flow as before: confirmingRemoveId) */}
+      {friendToRemove && (
+        <div className="modal modal-open" role="dialog" aria-labelledby="remove-friend-title">
+          <div className="modal-box max-w-sm rounded-3xl">
+            <h3 id="remove-friend-title" className="text-lg font-semibold">Remove friend?</h3>
+            <p className="mt-2 text-sm text-base-content/70">
+              {friendToRemove.fullName} will be removed from your friends. You can send them a new
+              request later.
+            </p>
+            <div className="modal-action mt-6">
+              <button
+                className="btn btn-ghost btn-sm rounded-xl"
+                onClick={() => setConfirmingRemoveId(null)}
+                disabled={isRemoving}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-error btn-sm rounded-xl"
+                onClick={() => removeFriendMutation(friendToRemove._id)}
+                disabled={isRemoving}
+              >
+                {isRemoving && <span className="loading loading-spinner loading-xs" />}
+                Remove
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={() => !isRemoving && setConfirmingRemoveId(null)} />
+        </div>
+      )}
     </div>
   );
 };
